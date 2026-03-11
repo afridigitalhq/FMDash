@@ -64,3 +64,22 @@ th {
 tr:hover {
   background-color: rgba(255,255,255,0.1);
 }
+
+/* ===== Fix gap between navbar and dashboard card ===== */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  margin-bottom: 0;
+}
+
+.dashboard-card {
+  margin-top: 0;
+}
+
+.container {
+  margin-top: 0;
+}
+
