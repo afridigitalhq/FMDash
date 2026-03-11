@@ -1,10 +1,11 @@
 {
   "name": "fmdash",
   "version": "1.0.0",
-  "description": "",
+  "description": "AfriDigital Cyber Security Dashboard",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -12,7 +13,16 @@
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "mongoose": "^9.2.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/afridigitalhq/FMDash.git"
+  },
+  "bugs": {
+    "url": "https://github.com/afridigitalhq/FMDash/issues"
+  },
+  "homepage": "https://github.com/afridigitalhq/FMDash#readme"
 }

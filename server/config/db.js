@@ -1,15 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(
-      "mongodb+srv://afrilove_admin:AFriLove%2B2026%23@afrilove-cluster.qznhpnf.mongodb.net/afrilove?retryWrites=true&w=majority"
-    );
-    console.log("✅ MongoDB Connected");
-  } catch (err) {
-    console.error("❌ MongoDB Error:", err);
-  }
-};
-
-module.exports = connectDB;
-
+// Replace process.env.MONGO_URI with your own URI if not using .env
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.log('MongoDB connection error:', err));
