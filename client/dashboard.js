@@ -1,40 +1,35 @@
-const apiKey = 'AfriDigital-FMDash-API-Key';
-
-let scans = [];
-
-function updateDashboard(filteredScans) {
-  let high = 0, medium = 0, low = 0;
-  const table = document.getElementById('scan-table');
-  table.innerHTML = '';
-  filteredScans.forEach(scan => {
-    const row = document.createElement('tr');
-    row.innerHTML = `<td>${scan.target}</td><td>${scan.vulnerability}</td><td>${scan.severity}</td><td>${scan.timestamp}</td>`;
-    table.appendChild(row);
-    if(scan.severity === 'High') high++;
-    else if(scan.severity === 'Medium') medium++;
-    else if(scan.severity === 'Low') low++;
-  });
-  document.getElementById('high').textContent = `High: ${high}`;
-  document.getElementById('medium').textContent = `Medium: ${medium}`;
-  document.getElementById('low').textContent = `Low: ${low}`;
+const apiKey='AfriDigital-FMDash-API-Key';
+const socket=io();
+async function updateWallet(){
+  const res=await fetch('/admin/wallet',{headers:{'x-api-key':apiKey}});
+  const data=await res.json();
+  document.getElementById('native-balance').innerText=data.nativeBalance;
+  document.getElementById('coin-balance').innerText=data.coinBalance;
 }
-
-// Fetch live scans from backend
-const API_KEY="AfriDigital-FMDash-API-Key"; const API_KEY="AfriDigital-FMDash-API-Key"; const API_KEY="AfriDigital-FMDash-API-Key"; fetch("https://afridigital-fmdash.onrender.com/admin/test",{headers:{"x-api-key":API_KEY}})
-  .then(res => res.json())
-  .then(data => { scans = data.scans || []; updateDashboard(scans); })
-  .catch(err => console.error('Error fetching scans:', err));
-
-// Search filter
-document.getElementById('search').addEventListener('input', e => {
-  const term = e.target.value.toLowerCase();
-  const filtered = scans.filter(scan => scan.target.toLowerCase().includes(term) || scan.severity.toLowerCase().includes(term));
-  updateDashboard(filtered);
+document.getElementById('convert-to-coin').addEventListener('click',async()=>{
+  const amount=parseInt(prompt('Enter native amount to convert:'));
+  await fetch('/admin/wallet/convert',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey},
+    body:JSON.stringify({direction:'toCoin',amount})
+  });
+  updateWallet();
 });
-
-// Test scan button
-document.getElementById('scanBtn').addEventListener('click', () => {
-  const newScan = { target: 'afrilove.com', vulnerability: 'Test Vulnerability', severity: ['High','Medium','Low'][Math.floor(Math.random()*3)], timestamp: new Date().toLocaleString() };
-  scans.push(newScan);
-  updateDashboard(scans);
+document.getElementById('convert-to-native').addEventListener('click',async()=>{
+  const amount=parseInt(prompt('Enter coin amount to convert:'));
+  await fetch('/admin/wallet/convert',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey},
+    body:JSON.stringify({direction:'toNative',amount})
+  });
+  updateWallet();
+});
+updateWallet();
+socket.on('new-scan', scan=>{
+  const scanList=document.getElementById('scan-list');
+  if(scanList){
+    const row=document.createElement('tr');
+    row.innerHTML=`<td>${scan.target}</td><td>${scan.vulnerability}</td><td>${scan.severity}</td><td>${scan.timestamp}</td>`;
+    scanList.appendChild(row);
+  }
 });

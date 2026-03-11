@@ -2,40 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AfriDigital FMDash Security Dashboard</title>
-<link rel="stylesheet" href="style.css">
+<title>FMDash v5</title>
+<script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>AfriDigital FMDash Security Dashboard</h1>
-
-    <!-- Search and Test Scan Button -->
-    <div style="margin-bottom: 15px;">
-      <input type="text" id="search" placeholder="Search by target or severity..." style="padding: 8px; width: 60%; border-radius: 5px; border: none;">
-      <button id="scanBtn" style="padding: 8px 12px; border-radius:5px; background-color:#3498db; color:white; border:none; cursor:pointer;">Run Test Scan</button>
-    </div>
-
-    <div class="summary">
-      <div class="card" id="high">High: 0</div>
-      <div class="card" id="medium">Medium: 0</div>
-      <div class="card" id="low">Low: 0</div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Target</th>
-          <th>Vulnerability</th>
-          <th>Severity</th>
-          <th>Timestamp</th>
-        </tr>
-      </thead>
-      <tbody id="scan-table">
-      </tbody>
-    </table>
-  </div>
-
-  <script src="dashboard.js"></script>
+<div id="top-bar">
+Wallet: <span id="native-balance">0</span> USD | Coin: <span id="coin-balance">0</span>
+<button id="convert-to-coin">To Coin</button>
+<button id="convert-to-native">To Native</button>
+</div>
+<h2>Scan Results</h2>
+<table id="scan-list">
+<thead>
+<tr><th>Target</th><th>Vulnerability</th><th>Severity</th><th>Timestamp</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+<script src="dashboard.js"></script>
 </body>
 </html>
