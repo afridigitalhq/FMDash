@@ -20,7 +20,7 @@ function updateDashboard(filteredScans) {
 }
 
 // Fetch live scans from backend
-fetch('http://localhost:5000/admin/test', { headers: { 'x-api-key': apiKey } })
+fetch('https://afridigital-fmdash.onrender.com/admin/test', { headers: { 'x-api-key': apiKey } })
   .then(res => res.json())
   .then(data => { scans = data.scans || []; updateDashboard(scans); })
   .catch(err => console.error('Error fetching scans:', err));
