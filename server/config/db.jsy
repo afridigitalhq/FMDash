@@ -1,0 +1,16 @@
+const mongoose = require("mongoose");
+
+const MONGO_URI = "mongodb+srv://afrilove_admin:AFriLove%2b2026%23@afrilove-cluster.qznhpnf.mongodb.net/afrilove?retryWrites=true&w=majority";
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ MongoDB Connected");
+  } catch (err) {
+    console.error("❌ MongoDB Error:", err.message);
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;
+
