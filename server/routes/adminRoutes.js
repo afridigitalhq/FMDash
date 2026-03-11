@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const apiKeyMiddleware = require('../middleware/apiKeyMiddleware');
 
-// Store scans in-memory
 const scans = [];
 
 router.get('/test', apiKeyMiddleware, (req, res) => {
