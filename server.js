@@ -1,24 +1,35 @@
-const express = require('express');
-const path = require('path');
+const express = require("express");
+const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
+
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-// Serve static files from client folder (CSS, JS, images)
-app.use(express.static(path.join(__dirname, 'client')));
+app.use(express.static(path.join(__dirname, "client")));
 
-// Serve index.html at root
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "index.html"));
 });
 
-// Example route for scan results (optional)
-app.get('/api/scan-results', (req, res) => {
-  // Example static data; you can replace with real scans
-  res.json([
-    { target: '192.168.0.1', vulnerability: 'SQL Injection', severity: 'High', timestamp: '2026-03-12 09:00' },
-    { target: '10.0.0.5', vulnerability: 'XSS', severity: 'Medium', timestamp: '2026-03-12 09:05' }
-  ]);
+// Send a demo scan result every 15 seconds
+setInterval(() => {
+  const scan = {
+    target: "example.com",
+    vulnerability: "XSS",
+    severity: "Medium",
+    timestamp: new Date().toLocaleString()
+  };
+
+  io.emit("newScan", scan);
+}, 15000);
+
+io.on("connection", (socket) => {
+  console.log("Client connected");
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});
