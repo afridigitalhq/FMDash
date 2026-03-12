@@ -31,4 +31,4 @@ app.post('/admin/login', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log('Server running on port', PORT));
-const adminRoutes = require('./routes/adminRoutes');\napp.use('/admin', adminRoutes);
+const adminRoutes = require('./server/routes/toolsRoutes');app.use('/admin', adminRoutes);
