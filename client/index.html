@@ -1,23 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>FMDash v5</title>
-<script src="/socket.io/socket.io.js"></script>
+  <meta charset="UTF-8">
+  <title>AfriDigital FMDash</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="top-bar">
-Wallet: <span id="native-balance">0</span> USD | Coin: <span id="coin-balance">0</span>
-<button id="convert-to-coin">To Coin</button>
-<button id="convert-to-native">To Native</button>
-</div>
-<h2>Scan Results</h2>
-<table id="scan-list">
-<thead>
-<tr><th>Target</th><th>Vulnerability</th><th>Severity</th><th>Timestamp</th></tr>
-</thead>
-<tbody></tbody>
-</table>
+  <header>
+    <h1>Wallet: 0 USD | Coin: 0 | To Coin To Native</h1>
+  </header>
+
+  <div class="container">
+    <h2>Scan Results</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Target</th>
+          <th>Vulnerability</th>
+          <th>Severity</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="scan-results">
+        <!-- Results will be populated here -->
+      </tbody>
+    </table>
+  </div>
 <script src="dashboard.js"></script>
 </body>
 </html>

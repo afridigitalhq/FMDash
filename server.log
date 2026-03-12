@@ -1,4 +1,2 @@
 nohup: ignoring input
-[dotenv@17.3.1] injecting env (5) from .env -- tip: 🛡️ auth for agents: https://vestauth.com
-[dotenv@17.3.1] injecting env (0) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
-Server running on port 5000
+✅ Server running on port 5000

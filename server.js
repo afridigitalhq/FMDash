@@ -1,34 +1,24 @@
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const app = express();
-const apiKeyMiddleware = require('./server/middleware/apiKeyMiddleware');
 
-app.use(express.json());
-
-// Serve frontend files
+// Serve static files from client folder (CSS, JS, images)
 app.use(express.static(path.join(__dirname, 'client')));
 
-// Serve index.html for the root route
+// Serve index.html at root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'index.html'));
 });
 
-// Example admin route
-app.get('/admin/test', apiKeyMiddleware, (req, res) => {
-  res.json({ message: 'Admin route accessed successfully' });
+// Example route for scan results (optional)
+app.get('/api/scan-results', (req, res) => {
+  // Example static data; you can replace with real scans
+  res.json([
+    { target: '192.168.0.1', vulnerability: 'SQL Injection', severity: 'High', timestamp: '2026-03-12 09:00' },
+    { target: '10.0.0.5', vulnerability: 'XSS', severity: 'Medium', timestamp: '2026-03-12 09:05' }
+  ]);
 });
 
-// Admin login route
-app.post('/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  if(username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-    res.json({ message: 'Login successful' });
-  } else {
-    res.status(401).json({ message: 'Invalid credentials' });
-  }
-});
-
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log('Server running on port', PORT));
-const adminRoutes = require('./server/routes/toolsRoutes');app.use('/admin', adminRoutes);
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
