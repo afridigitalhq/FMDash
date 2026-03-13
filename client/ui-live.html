@@ -1,0 +1,212 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FMDash Live</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#121212;color:#e0e0e0;}
+header{background:#1a73e8;color:#fff;padding:15px;display:flex;justify-content:space-between;align-items:center;}
+header .wallet{font-weight:bold;} header .signout{cursor:pointer;text-decoration:underline;}
+#sidebar{width:220px;background:#1c1c1c;height:100vh;position:fixed;top:0;left:0;padding:20px;box-sizing:border-box;}
+#sidebar h2{font-size:1.2rem;margin-bottom:10px;}#sidebar ul{list-style:none;padding:0;}
+#sidebar li{padding:10px;margin-bottom:5px;cursor:pointer;background:#2a2a2a;border-radius:5px;}#sidebar li:hover{background:#3a3a3a;}
+#main{margin-left:240px;padding:20px;}button{padding:8px 12px;margin-right:5px;border:none;border-radius:5px;cursor:pointer;}button.disabled{opacity:0.5;cursor:not-allowed;}#notifications{margin-bottom:10px;}
+table{width:100%;border-collapse:collapse;margin-bottom:20px;}th,td{border:1px solid #444;padding:8px;text-align:left;}th{background:#1a73e8;color:#fff;}#nodes-table td{text-align:center;}.status-online{color:#0f0;font-weight:bold;}.status-offline{color:#f00;font-weight:bold;}
+</style></head><body>
+<header><div>FMDash Security</div><div class="wallet">Coins: <span id="coin-balance">0</span> | Tier: <span id="tier">Basic</span></div><div class="signout" onclick="alert('Sign Out')">Sign Out</div></header>
+<div id="sidebar"><h2>Navigation</h2><ul><li onclick="showPanel('dashboard')">Dashboard Home</li><li onclick="showPanel('scan')">Scan</li><li onclick="showPanel('stop')">Stop Attack</li><li onclick="showPanel('nodes')">Nodes</li><li onclick="showPanel('logs')">Logs / Reports</li><li onclick="showPanel('premium')">Premium / Coins</li></ul></div>
+<div id="main"><div id="notifications"></div><div id="dashboard-panel"><h2>Real-Time Scan Results</h2><table id="scan-results"><thead><tr><th>Target</th><th>Vulnerability</th><th>Severity</th><th>Timestamp</th></tr></thead><tbody></tbody></table><h3>Actions</h3>
+<button id="scan-btn">Start Scan</button><button id="manual-stop-btn" class="disabled">Manual Stop Attack</button><button id="auto-stop-btn" class="disabled">Auto Stop Attack</button></div>
+<div id="nodes-panel" style="display:none;"><h2>Connected Nodes</h2><table id="nodes-table"><thead><tr><th>Node ID</th><th>Status</th><th>Last Scan</th></tr></thead><tbody></tbody></table></div>
+<div id="premium-panel" style="display:none;"><h2>Upgrade / Buy Coins</h2><p>Basic:100 | Pro:300 | Elite:500</p><button onclick="buyCoins(100)">Buy 100 Coins</button><button onclick="buyCoins(300)">Buy 300 Coins</button><button onclick="buyCoins(500)">Buy 500 Coins</button></div>
+<div id="logs-panel" style="display:none;"><h2>Logs</h2><div id="logs-container"></div></div></div>
+</body></html>
+<!-- === Node Management Panel for Master Admin === -->
+<div id="nodes-management-panel" style="display:none;margin-top:20px;">
+  <h2>Node Management (Master Admin)</h2>
+  <table id="nodes-mgmt-table">
+    <thead><tr><th>Node ID</th><th>Token</th><th>Scan</th><th>Logs</th><th>Manual Stop</th><th>Auto Stop</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <h3>Add Node</h3>
+  <input type="text" id="new-node-id" placeholder="Node ID">
+  <input type="text" id="new-node-token" placeholder="Token">
+  <label><input type="checkbox" id="cap-scan"> Scan</label>
+  <label><input type="checkbox" id="cap-logs"> Logs</label>
+  <label><input type="checkbox" id="cap-manual"> Manual Stop</label>
+  <label><input type="checkbox" id="cap-auto"> Auto Stop</label>
+  <button id="add-node-btn">Add Node</button>
+</div>
+
+<!-- ===============================
+VULNERABILITY SCAN CENTER
+=============================== -->
+<div id="scan-center" style="position:fixed;top:11200px;right:20px;width:450px;height:320px;background:#1c1c1c;color:#fff;padding:12px;border-radius:12px;box-shadow:0 0 14px rgba(0,0,0,0.7);overflow:auto;z-index:999;">
+<h3>Vulnerability Scan Center</h3>
+
+<input id="scan-site-input" placeholder="Enter website URL" style="width:100%;padding:6px;margin-bottom:6px;">
+
+<button id="quick-scan-btn" style="margin:4px;padding:6px 10px;">Quick Scan</button>
+<button id="full-scan-btn" style="margin:4px;padding:6px 10px;">Full Scan</button>
+<button id="schedule-scan-btn" style="margin:4px;padding:6px 10px;">Schedule Scan</button>
+
+<div id="scan-status" style="margin-top:8px;color:#f1c40f;"></div>
+
+<h4>Scan Results</h4>
+<div id="scan-results" style="font-size:12px;max-height:120px;overflow:auto;border-top:1px solid #333;padding-top:4px;"></div>
+
+<button id="download-report-btn" style="margin-top:6px;padding:6px 10px;">Download Report</button>
+</div>
+
+
+
+<!-- ===============================
+COMPLIANCE CHECK PANEL
+=============================== -->
+
+<div id="compliance-panel" style="position:fixed;top:11800px;right:20px;width:420px;background:#1b1b1b;color:#fff;padding:12px;border-radius:10px;box-shadow:0 0 12px rgba(0,0,0,0.6);z-index:999;">
+<h3>Security Compliance Checker</h3>
+
+<input id="compliance-site" placeholder="Enter website URL" style="width:100%;padding:6px;margin-bottom:6px;">
+
+<button id="run-compliance-scan" style="padding:6px 10px;margin-top:4px;">Run Compliance Scan</button>
+
+<div id="compliance-status" style="margin-top:8px;color:#f1c40f;"></div>
+
+<h4>Compliance Results</h4>
+
+<div id="compliance-results" style="font-size:12px;margin-top:6px;"></div>
+
+</div>
+
+
+
+<!-- ===============================
+SECURITY OPERATIONS CENTER (SOC) DASHBOARD
+=============================== -->
+
+<div id="soc-dashboard" style="position:fixed;top:12400px;right:20px;width:460px;background:#1c1c1c;color:#fff;padding:14px;border-radius:12px;box-shadow:0 0 14px rgba(0,0,0,0.7);z-index:999;overflow:auto;">
+<h3>Security Operations Center (SOC)</h3>
+
+<div style="margin-bottom:6px;">
+<b>Active Threats:</b> <span id="soc-active-threats">0</span><br>
+<b>Global Attacks Today:</b> <span id="soc-global-attacks">0</span><br>
+<b>Active Nodes:</b> <span id="soc-active-nodes">0</span><br>
+<b>System Health:</b> <span id="soc-system-health">Normal</span>
+</div>
+
+<button id="soc-refresh-btn" style="padding:6px 10px;margin-top:4px;">Refresh Data</button>
+
+<div id="soc-log" style="margin-top:8px;font-size:12px;max-height:140px;overflow:auto;border-top:1px solid #333;padding-top:4px;"></div>
+
+</div>
+
+
+
+<!-- ===============================
+SOC DASHBOARD COINS & REFERRALS
+=============================== -->
+
+<div id="soc-coin-referral" style="margin-top:12px;padding:8px;background:#222;border-radius:8px;">
+<h4>Node & Referral Stats</h4>
+<div>
+<b>Coins Earned Today:</b> <span id="soc-coins-earned">0</span><br>
+<b>Node Contributions:</b> <span id="soc-node-contributions">0</span><br>
+<b>Referrals Today:</b> <span id="soc-referrals-today">0</span><br>
+<b>Referral Bonus Earned:</b> <span id="soc-referral-bonus">0</span>
+</div>
+<button id="soc-coin-refresh-btn" style="margin-top:4px;padding:6px 10px;">Refresh Stats</button>
+</div>
+
+
+
+<!-- ===============================
+SOC DASHBOARD COIN CASHOUT
+=============================== -->
+
+<div id="soc-coin-cashout" style="margin-top:12px;padding:8px;background:#222;border-radius:8px;">
+<h4>Coin Conversion / Payout</h4>
+<div>
+<b>Current Coins:</b> <span id="soc-current-coins">0</span><br>
+<b>Estimated Cash:</b> <span id="soc-estimated-cash">₦0</span>
+</div>
+<button id="soc-convert-coins-btn" style="margin-top:6px;padding:6px 10px;">Convert Coins → Cash</button>
+<div id="soc-cashout-status" style="margin-top:4px;color:#f1c40f;"></div>
+</div>
+
+
+# paste the full SOC + Coins + Payout + Scheduled Scan code here
+
+<!-- ===============================
+FULL SOC DASHBOARD
+Includes:
+- SOC panel
+- Coin & Referral Stats
+- Coin Conversion / Payout
+- Scheduled Monitoring / Auto-Scan
+=============================== -->
+
+<div id="soc-dashboard" style="position:fixed;top:11800px;right:20px;width:480px;background:#1c1c1c;color:#fff;padding:14px;border-radius:12px;box-shadow:0 0 14px rgba(0,0,0,0.7);z-index:999;overflow:auto;">
+<h3>Security Operations Center (SOC)</h3>
+
+<div style="margin-bottom:6px;">
+<b>Active Threats:</b> <span id="soc-active-threats">0</span><br>
+<b>Global Attacks Today:</b> <span id="soc-global-attacks">0</span><br>
+<b>Active Nodes:</b> <span id="soc-active-nodes">0</span><br>
+<b>System Health:</b> <span id="soc-system-health">Normal</span>
+</div>
+
+<button id="soc-refresh-btn" style="padding:6px 10px;margin-top:4px;">Refresh Data</button>
+
+<div id="soc-log" style="margin-top:8px;font-size:12px;max-height:140px;overflow:auto;border-top:1px solid #333;padding-top:4px;"></div>
+
+<!-- Node & Referral Stats -->
+<div id="soc-coin-referral" style="margin-top:12px;padding:8px;background:#222;border-radius:8px;">
+<h4>Node & Referral Stats</h4>
+<div>
+<b>Coins Earned Today:</b> <span id="soc-coins-earned">0</span><br>
+<b>Node Contributions:</b> <span id="soc-node-contributions">0</span><br>
+<b>Referrals Today:</b> <span id="soc-referrals-today">0</span><br>
+<b>Referral Bonus Earned:</b> <span id="soc-referral-bonus">0</span>
+</div>
+<button id="soc-coin-refresh-btn" style="margin-top:4px;padding:6px 10px;">Refresh Stats</button>
+</div>
+
+<!-- Coin Conversion / Payout -->
+<div id="soc-coin-cashout" style="margin-top:12px;padding:8px;background:#222;border-radius:8px;">
+<h4>Coin Conversion / Payout</h4>
+<div>
+<b>Current Coins:</b> <span id="soc-current-coins">0</span><br>
+<b>Estimated Cash:</b> <span id="soc-estimated-cash">₦0</span>
+</div>
+<button id="soc-convert-coins-btn" style="margin-top:6px;padding:6px 10px;">Convert Coins → Cash</button>
+<div id="soc-cashout-status" style="margin-top:4px;color:#f1c40f;"></div>
+</div>
+
+<!-- Scheduled Monitoring / Auto-Scan -->
+<div id="soc-scheduled-monitoring" style="margin-top:12px;padding:8px;background:#222;border-radius:8px;">
+<h4>Scheduled Monitoring & Auto-Scan</h4>
+<div>
+<b>Site:</b> <input id="sched-site-input" placeholder="Enter website URL" style="padding:4px;width:70%;"><br>
+<button id="start-monitor-btn" style="margin-top:4px;padding:6px 10px;">Start Monitoring</button>
+<button id="stop-monitor-btn" style="margin-top:4px;padding:6px 10px;">Stop Monitoring</button>
+</div>
+<div style="margin-top:6px;">
+<b>Next Scan In:</b> <span id="sched-countdown">00:00:00</span><br>
+<b>Scan History:</b>
+<div id="sched-history" style="max-height:100px;overflow:auto;font-size:12px;margin-top:4px;"></div>
+</div>
+</div>
+
+
+
+<!-- ===============================
+SOC LIVE ATTACK MAP & THREAT FEED
+=============================== -->
+
+<div id="soc-live-map" style="margin-top:12px;padding:8px;background:#222;border-radius:8px;">
+<h4>Live Attack Map & Threat Feed</h4>
+<div id="world-map" style="width:100%;height:300px;background:#111;border-radius:8px;margin-bottom:6px;position:relative;color:#fff;text-align:center;line-height:300px;">
+World Map Loading...
+</div>
+<div id="soc-threat-feed" style="max-height:140px;overflow:auto;font-size:12px;border-top:1px solid #333;padding-top:4px;"></div>
+</div>
+
+
+<script src="combined-scripts-final.js"></script>

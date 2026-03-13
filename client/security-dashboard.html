@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FMDash Cyber Watchdog</title>
+<style>
+body{background:#0d1117;color:#e6edf3;font-family:Arial;margin:0}
+header{background:#161b22;padding:15px;font-size:20px}
+.container{padding:20px}
+.panel{background:#161b22;padding:15px;margin-bottom:20px;border-radius:8px}
+table{width:100%;border-collapse:collapse}
+td,th{border:1px solid #30363d;padding:8px}
+th{background:#21262d}
+.alert{background:#ff4d4d;color:white;padding:10px;margin-bottom:10px}
+.score{font-size:30px;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<header>
+🛡 FMDash Cyber Watchdog
+</header>
+
+<div class="container">
+
+<div class="panel">
+<h2>📊 Site Security Score</h2>
+<div class="score" id="score">100</div>
+</div>
+
+<div class="panel">
+<h2>🚨 Live Threat Feed</h2>
+<table>
+<thead>
+<tr>
+<th>IP</th>
+<th>Country</th>
+<th>Endpoint</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody id="threatTable"></tbody>
+</table>
+</div>
+
+<div class="panel">
+<h2>🌍 Real-Time Attack Map</h2>
+<div id="map"></div>
+</div>
+
+<div class="panel">
+<h2>🔔 Alerts</h2>
+<div id="alerts"></div>
+</div>
+
+</div>
+
+<script>
+
+const ws = new WebSocket(location.origin.replace("http","ws"));
+
+let securityScore = 100;
+
+ws.onmessage = function(event){
+
+const data = JSON.parse(event.data);
+
+if(data.attack){
+
+const row = document.createElement("tr");
+
+row.innerHTML = `
+<td>${data.attack.ip}</td>
+<td>${data.attack.country}</td>
+<td>${data.attack.endpoint}</td>
+<td>${new Date().toLocaleTimeString()}</td>
+`;
+
+document.getElementById("threatTable").prepend(row);
+
+securityScore -= 5;
+document.getElementById("score").innerText = securityScore;
+
+const alert = document.createElement("div");
+alert.className="alert";
+alert.innerText="Attack detected from "+data.attack.country+" ("+data.attack.ip+")";
+
+document.getElementById("alerts").prepend(alert);
+
+}
+
+}
+
+</script>
+
+</body>
+</html>

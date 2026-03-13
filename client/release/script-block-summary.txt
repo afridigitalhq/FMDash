@@ -1,0 +1,145 @@
+
+=== Script Block 1 ===
+Function: showPanel
+Let: coins
+Function: updateButtons
+Function: addNotification
+Const: n
+Function: buyCoins
+Const: ws
+Const: d
+
+=== Script Block 2 ===
+Function: showNodesMgmt
+Function: refreshNodesTable
+Const: tbody
+Const: tr
+Function: addNode
+Const: nodeId
+Const: token
+Const: capabilities
+Function: removeNode
+Const: d
+
+=== Script Block 3 ===
+
+=== Script Block 4 ===
+Const: SCAN_COST
+
+=== Script Block 5 ===
+Const: MANUAL_STOP_COST
+Const: AUTO_STOP_COST
+
+=== Script Block 6 ===
+Function: updatePremiumPanel
+Const: panel
+Function: buyCoins
+
+=== Script Block 7 ===
+Function: updatePremiumPanel
+Const: panel
+Function: buyCoins
+
+=== Script Block 8 ===
+Function: showAdminPanel
+Const: main
+Function: refreshNodes
+Const: tbody
+Const: row
+Function: refreshClients
+Const: tbody
+Const: row
+Function: addAdminNotification
+Const: n
+Const: d
+
+=== Script Block 9 ===
+Const: scanStatus
+Const: scanResults
+Function: runScan
+Const: site
+Const: site
+Const: d
+Const: line
+
+=== Script Block 10 ===
+Const: complianceStatus
+Const: complianceResults
+Const: site
+Const: checks
+Let: score
+Const: row
+Const: scoreRow
+
+=== Script Block 11 ===
+Const: socActiveThreats
+Const: socGlobalAttacks
+Const: socActiveNodes
+Const: socSystemHealth
+Const: socLog
+Function: refreshSOCData
+Const: logs
+Const: row
+
+=== Script Block 12 ===
+Const: socCoinsEarned
+Const: socNodeContributions
+Const: socReferralsToday
+Const: socReferralBonus
+Function: refreshCoinReferralStats
+
+=== Script Block 13 ===
+Const: socCurrentCoins
+Const: socEstimatedCash
+Const: socCashoutStatus
+Const: socConvertBtn
+Function: refreshCoinCash
+Const: coins
+Const: coins
+
+=== Script Block 14 ===
+Const: socActiveThreats
+Const: socGlobalAttacks
+Const: socActiveNodes
+Const: socSystemHealth
+Const: socLog
+Function: refreshSOCData
+Const: logs
+Const: row
+Const: socCoinsEarned
+Const: socNodeContributions
+Const: socReferralsToday
+Const: socReferralBonus
+Function: refreshCoinReferralStats
+Const: socCurrentCoins
+Const: socEstimatedCash
+Const: socCashoutStatus
+Const: socConvertBtn
+Function: refreshCoinCash
+Const: coins
+Const: coins
+Const: countdownEl
+Const: historyEl
+Let: countdown
+Let: countdownInterval
+Function: updateCountdown
+Const: row
+Let: hrs
+Let: mins
+Let: secs
+
+=== Script Block 15 ===
+Const: threatFeed
+Const: worldMap
+Function: updateWorldMap
+Function: updateThreatFeed
+Const: logs
+Const: row
+
+=== MISSING / TODO ===
+- Finish Master Admin panel logic
+- Implement wsMulti WebSocket for scans/compliance
+- Backend integration for SOC, coins, threats
+- Persistence for coins & tier
+- Error handling & validation
+- Scheduled scans / automation

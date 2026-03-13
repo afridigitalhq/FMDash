@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FMDash Full Live</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#121212;color:#e0e0e0;}
+header{background:#1a73e8;color:#fff;padding:15px;display:flex;justify-content:space-between;align-items:center;}
+header .wallet{font-weight:bold;} header .signout{cursor:pointer;text-decoration:underline;}
+#sidebar{width:220px;background:#1c1c1c;height:100vh;position:fixed;top:0;left:0;padding:20px;box-sizing:border-box;}
+#sidebar h2{font-size:1.2rem;margin-bottom:10px;}#sidebar ul{list-style:none;padding:0;}
+#sidebar li{padding:10px;margin-bottom:5px;cursor:pointer;background:#2a2a2a;border-radius:5px;}#sidebar li:hover{background:#3a3a3a;}
+#main{margin-left:240px;padding:20px;}button{padding:8px 12px;margin-right:5px;border:none;border-radius:5px;cursor:pointer;}button.disabled{opacity:0.5;cursor:not-allowed;}#notifications,#admin-notifications{margin-bottom:10px;}
+table{width:100%;border-collapse:collapse;margin-bottom:20px;}th,td{border:1px solid #444;padding:8px;text-align:left;}th{background:#1a73e8;color:#fff;}#nodes-table td,#admin-nodes-table td{text-align:center;}.status-online{color:#0f0;font-weight:bold;}.status-offline{color:#f00;font-weight:bold;}
+</style></head><body>
+<header><div>FMDash Security</div><div class="wallet">Coins: <span id="coin-balance">0</span> | Tier: <span id="tier">Basic</span></div><div class="signout" onclick="alert('Sign Out')">Sign Out</div></header>
+<div id="sidebar"><h2>Navigation</h2><ul>
+<li onclick="showPanel('dashboard')">Dashboard Home</li>
+<li onclick="showPanel('scan')">Scan</li>
+<li onclick="showPanel('stop')">Stop Attack</li>
+<li onclick="showPanel('nodes')">Nodes</li>
+<li onclick="showPanel('logs')">Logs / Reports</li>
+<li onclick="showPanel('premium')">Premium / Coins</li>
+<li onclick="showPanel('admin')">Master Admin</li>
+</ul></div>
+<div id="main">
+<div id="notifications"></div>
+<div id="dashboard-panel"><h2>Real-Time Scan Results</h2>
+<table id="scan-results"><thead><tr><th>Target</th><th>Vulnerability</th><th>Severity</th><th>Timestamp</th></tr></thead><tbody></tbody></table>
+<h3>Actions</h3>
+<button id="scan-btn">Start Scan</button>
+<button id="manual-stop-btn" class="disabled">Manual Stop Attack</button>
+<button id="auto-stop-btn" class="disabled">Auto Stop Attack</button>
+</div>
+
+<div id="nodes-panel" style="display:none;"><h2>Connected Nodes</h2>
+<table id="nodes-table"><thead><tr><th>Node ID</th><th>Status</th><th>Last Scan</th></tr></thead><tbody></tbody></table></div>
+
+<div id="premium-panel" style="display:none;"><h2>Upgrade / Buy Coins</h2></div>
+
+<div id="logs-panel" style="display:none;"><h2>Logs</h2><div id="logs-container"></div></div>
+
+<div id="admin-panel" style="display:none;"></div>
+</div>
+
+<script>
+// --- Panel Navigation ---
+function showPanel(p){['dashboard','nodes','premium','logs','admin'].forEach(x=>document.getElementById(x+'-panel').style.display='none');document.getElementById(p+'-panel').style.display='block');}
+
+// --- Coins & Tiers ---
+let coins=150,tier='Basic';
+document.getElementById('coin-balance').innerText=coins; document.getElementById('tier').innerText=tier;
+
+// --- Action Costs ---
+const SCAN_COST=5, MANUAL_STOP_COST=20, AUTO_STOP_COST=50;
+function updateButtons(){
+  document.getElementById('scan-btn').classList.toggle('disabled',coins<SCAN_COST);
+  document.getElementById('manual-stop-btn').classList.toggle('disabled',coins<MANUAL_STOP_COST || tier==='Basic');
+  document.getElementById('auto-stop-btn').classList.toggle('disabled',coins<AUTO_STOP_COST || tier==='Basic');
+}
+
+// --- Notifications ---
+function addNotification(msg){const n=document.createElement('div');n.innerText=msg;document.getElementById('notifications').appendChild(n);setTimeout(()=>n.remove(),5000);}
+
+// --- Buy Coins / Premium Panel ---
+function updatePremiumPanel(){
+  const panel=document.getElementById('premium-panel');
+  panel.innerHTML=`
+  <h2>Upgrade / Buy Coins</h2>
+  <p>Current Coins: ${coins} | Tier: ${tier}</p>
+  <button onclick="buyCoins(100)">Buy 100 Coins</button>
+  <button onclick="buyCoins(300)">Buy 300 Coins</button>
+  <button onclick="buyCoins(500)">Buy 500 Coins</button>
+  <p>Action Costs: Scan = ${SCAN_COST}, Manual Stop = ${MANUAL_STOP_COST}, Auto Stop = ${AUTO_STOP_COST}</p>
+  <p>Tier Limits: Basic = Scan only, Pro = Scan + Manual/Auto Stop, Elite = All actions</p>
+  `;
+}
+function buyCoins(a){coins+=a; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${a} coins.`);}
+setInterval(updatePremiumPanel,5000); updatePremiumPanel();
+
+// --- WebSocket Connection ---
+const ws=new WebSocket("ws://localhost:5000");
+ws.addEventListener('open',()=>{console.log('Connected to FMDash WebSocket');ws.send(JSON.stringify({action:'register',nodeId:'NODE_001',token:'abc123'}));});
+ws.addEventListener('message',e=>{
+  const d=JSON.parse(e.data);
+  if(d.client){coins=d.client.coins;tier=d.client.tier;document.getElementById('coin-balance').innerText=coins;document.getElementById('tier').innerText=tier;updateButtons();}
+  if(d.scan){const t=document.getElementById('scan-results').querySelector('tbody');const r=document.createElement('tr');r.innerHTML=`<td>${d.scan.target}</td><td>${d.scan.vulnerability}</td><td style="color:${d.scan.severity==='High'?'red':d.scan.severity==='Medium'?'orange':'green'}">${d.scan.severity}</td><td>${new Date(d.scan.timestamp).toLocaleString()}</td>`;t.appendChild(r);}
+  if(d.log){const c=document.getElementById('logs-container');const x=document.createElement('div');x.innerText=d.log;c.appendChild(x);}
+  if(d.nodes || d.clients){refreshAdminPanel(d.nodes||[],d.clients||[]);}
+});
+
+// --- Actions ---
+document.getElementById('scan-btn').addEventListener('click',()=>{if(coins>=SCAN_COST){ws.send(JSON.stringify({action:'scan',target:'example.com'}));coins-=SCAN_COST;updateButtons();addNotification(`Scan started - ${SCAN_COST} coins deducted`);}else addNotification('Not enough coins');});
+document.getElementById('manual-stop-btn').addEventListener('click',()=>{if(coins>=MANUAL_STOP_COST && tier!=='Basic'){ws.send(JSON.stringify({action:'manual-stop'}));coins-=MANUAL_STOP_COST;updateButtons();addNotification(`Manual Stop executed - ${MANUAL_STOP_COST} coins deducted`);}else addNotification('Not enough coins or tier too low');});
+document.getElementById('auto-stop-btn').addEventListener('click',()=>{if(coins>=AUTO_STOP_COST && tier!=='Basic'){ws.send(JSON.stringify({action:'auto-stop'}));coins-=AUTO_STOP_COST;updateButtons();addNotification(`Auto Stop executed - ${AUTO_STOP_COST} coins deducted`);}else addNotification('Not enough coins or tier too low');});
+
+// --- Master Admin Panel ---
+function refreshAdminPanel(nodes,clients){
+  const panel=document.getElementById('admin-panel');
+  panel.innerHTML=`
+  <h2>Master Admin: Node & Client Management</h2>
+  <div id="admin-notifications"></div>
+  <h3>Connected Nodes</h3>
+  <table id="admin-nodes-table"><thead><tr><th>Node ID</th><th>Status</th><th>Capabilities</th><th>Actions</th></tr></thead><tbody></tbody></table>
+  <h3>Client Overrides</h3>
+  <table id="admin-clients-table"><thead><tr><th>Client</th><th>Coins</th><th>Tier</th><th>Actions</th></tr></thead><tbody></tbody></table>
+  `;
+  const tbodyNodes=document.querySelector('#admin-nodes-table tbody');tbodyNodes.innerHTML='';nodes.forEach(n=>{const r=document.createElement('tr');r.innerHTML=`<td>${n.nodeId}</td><td class="${n.online?'status-online':'status-offline'}">${n.online?'Online':'Offline'}</td><td>${JSON.stringify(n.capabilities)}</td><td><button onclick="removeNode('${n.nodeId}')">Remove</button></td>`;tbodyNodes.appendChild(r);});
+  const tbodyClients=document.querySelector('#admin-clients-table tbody');tbodyClients.innerHTML='';clients.forEach(c=>{const r=document.createElement('tr');r.innerHTML=`<td>${c.username}</td><td>${c.coins}</td><td>${c.tier}</td><td><button onclick="overrideCoins('${c.username}',50)">+50 Coins</button><button onclick="setTier('${c.username}','Elite')">Set Elite</button></td>`;tbodyClients.appendChild(r);});
+}
+window.removeNode=nodeId=>{ws.send(JSON.stringify({action:'remove-node',nodeId})); addAdminNotification(`Requested removal of ${nodeId}`);};
+window.overrideCoins=(user,amount)=>{ws.send(JSON.stringify({action:'override-coins',username:user,coins:amount})); addAdminNotification(`Override ${amount} coins for ${user}`);};
+window.setTier=(user,tier)=>{ws.send(JSON.stringify({action:'set-tier',username:user,tier:tier})); addAdminNotification(`Set tier ${tier} for ${user}`);};
+function addAdminNotification(msg){const n=document.createElement('div');n.innerText=msg;document.getElementById('admin-notifications').appendChild(n);setTimeout(()=>n.remove(),5000);}
+setInterval(()=>{ws.send(JSON.stringify({action:'request-nodes'})); ws.send(JSON.stringify({action:'request-clients'}));},5000);
+</script>
+</body></html>

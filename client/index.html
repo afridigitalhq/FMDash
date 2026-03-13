@@ -1,32 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>AfriDigital FMDash</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header>
-    <h1>Wallet: 0 USD | Coin: 0 | To Coin To Native</h1>
-  </header>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>AfriDigital FMDash</title><link rel="stylesheet" href="css/style.css"></head><body>
+<header><h1 style="float:left;">Wallet: <span id="wallet">0</span> | Coins: <span id="coins">0</span></h1><button style="float:right;" onclick="logout()">Sign Out</button></header>
+<div class="marquee"><p>Live Scans, Stop Attacks, Premium, Store, Payments...</p></div>
+<div class="sidebar"><ul><li>Home</li><li>Wallet</li><li>Store</li><li>Settings</li><li>Payments</li></ul></div>
+<div class="container">
+<h2>Scan Results</h2>
+<table><thead><tr><th>Target</th><th>Vulnerability</th><th>Severity</th><th>NodeID</th><th>Timestamp</th></tr></thead><tbody id="scan-results"></tbody></table>
 
-  <div class="container">
-    <h2>Scan Results</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Target</th>
-          <th>Vulnerability</th>
-          <th>Severity</th>
-          <th>Timestamp</th>
-        </tr>
-      </thead>
-      <tbody id="scan-results">
-        <!-- Results will be populated here -->
-      </tbody>
-    </table>
-  </div>
-<script src="dashboard.js"></script>
-<script src="/socket.io/socket.io.js"></script>
-</body>
-</html>
+<div class="scan-controls">
+<h2>Scan Controls</h2>
+<button onclick="startScan('quick',10)">Quick Scan (10 coins)</button>
+<button onclick="startScan('deep',30)">Deep Scan (30 coins)</button>
+<button onclick="startScan('full',70)">Full Audit (70 coins)</button>
+</div>
+
+<div class="subscriptions">
+<h2>Stop Attack Controls / Premium</h2>
+<button id="manual-override" disabled>Manual Stop Attack (20 coins)</button>
+<button id="auto-override" disabled>Auto Stop Attack (50 coins)</button>
+<div id="premium-tiers">Premium: Basic(100) / Pro(300) / Elite(500) coins per month</div>
+<button onclick="payWithPaystack('Basic')">Paystack Basic</button>
+<button onclick="payWithPaystack('Pro')">Paystack Pro</button>
+<button onclick="payWithPaystack('Elite')">Paystack Elite</button>
+<button onclick="payWithCrypto('Basic')">Crypto Basic</button>
+<button onclick="payWithCrypto('Pro')">Crypto Pro</button>
+<button onclick="payWithCrypto('Elite')">Crypto Elite</button>
+</div>
+
+<div id="chat-box"></div><input id="chat-input" placeholder="Type a message"><button id="chat-send">Send</button>
+<script src="js/dashboard.js"></script>
+</div></body></html>

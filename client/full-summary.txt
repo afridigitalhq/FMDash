@@ -1,0 +1,167 @@
+=== FULL MERGED FUNCTIONS, CONSTS, LETS ===
+
+-- FUNCTIONS --
+Function: 
+Function: _10
+Function: _2
+Function: _3
+Function: _4
+Function: _5
+Function: _6
+Function: _7
+Function: _8
+Function: _9
+Function: addAdminNotification
+Function: addAdminNotification_2
+Function: addNode
+Function: addNotification
+Function: buyCoin
+Function: buyCoin_2
+Function: buyCoin_3
+Function: deleteNode
+Function: deleteNodeBackend
+Function: deleteNode_2
+Function: editNode
+Function: editNode_2
+Function: loadU
+Function: refre
+Function: refre_10
+Function: refre_11
+Function: refre_12
+Function: refre_2
+Function: refre_3
+Function: refre_4
+Function: refre_5
+Function: refre_6
+Function: refre_7
+Function: refre_8
+Function: refre_9
+Function: removeNode
+Function: runScan
+Function: runScheduledScan
+Function: updateButton
+Function: updateCountdown
+Function: updateNodeBackend
+Function: updatePremiumPanel
+Function: updatePremiumPanel_2
+Function: updateThreatFeed
+Function: updateWorldMap
+
+-- CONSTS --
+Const: AUTO_STOP_COST 
+Const: MANUAL_STOP_COST 
+Const: SCAN_COST 
+Const: capabilities
+Const: checks
+Const: coins
+Const: coins_2
+Const: coins_3
+Const: coins_4
+Const: complianceResults
+Const: complianceStatus
+Const: countdownEl
+Const: d
+Const: d 
+Const: d_2
+Const: data 
+Const: data _2
+Const: data _3
+Const: data _4
+Const: data _5
+Const: data _6
+Const: data _7
+Const: data _8
+Const: div 
+Const: div _2
+Const: el 
+Const: historyEl
+Const: line
+Const: logs
+Const: logs_2
+Const: logs_3
+Const: main 
+Const: newToken 
+Const: newToken _2
+Const: nodeId
+Const: nodeRow 
+Const: nodeRow _2
+Const: nodeRow _3
+Const: panel 
+Const: panel _2
+Const: res 
+Const: res _2
+Const: res _3
+Const: res _4
+Const: res _5
+Const: result 
+Const: result _2
+Const: row
+Const: row 
+Const: row _2
+Const: row _3
+Const: row_2
+Const: row_3
+Const: row_4
+Const: row_5
+Const: savedCoins 
+Const: scanResults 
+Const: scanStatus 
+Const: scoreRow
+Const: site
+Const: site_2
+Const: site_3
+Const: socActiveNodes
+Const: socActiveNodes_2
+Const: socActiveThreats
+Const: socActiveThreats_2
+Const: socCashoutStatus
+Const: socCashoutStatus_2
+Const: socCoinsEarned
+Const: socCoinsEarned_2
+Const: socConvertBtn
+Const: socConvertBtn_2
+Const: socCurrentCoins
+Const: socCurrentCoins_2
+Const: socEstimatedCash
+Const: socEstimatedCash_2
+Const: socGlobalAttacks
+Const: socGlobalAttacks_2
+Const: socLog
+Const: socLog_2
+Const: socNodeContributions
+Const: socNodeContributions_2
+Const: socReferralBonus
+Const: socReferralBonus_2
+Const: socReferralsToday
+Const: socReferralsToday_2
+Const: socSystemHealth
+Const: socSystemHealth_2
+Const: tbody
+Const: tbody 
+Const: tbody _2
+Const: tbody _3
+Const: tbody _4
+Const: threatFeed
+Const: token
+Const: tr
+Const: worldMap
+Const: ws
+Const: wsAdmin 
+Const: wsMulti 
+Const: x
+
+-- LET VARIABLES --
+Let: coins
+Let: countdown
+Let: countdownInterval
+Let: hrs
+Let: mins
+Let: score
+Let: secs
+
+=== MISSING / TODO ===
+- Verify Master Admin panel edits & deletes hit backend
+- Backend integration for SOC, coins, threats fully validated
+- Error handling & validation for all async calls
+- Scheduled scans / automation confirmed
+- Any additional UI enhancements or fixes

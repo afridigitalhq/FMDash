@@ -1,0 +1,119 @@
+Deployment started at Fri Mar 13 19:01:27 WAT 2026
+⚠️  full-summary.awk not found!
+⚠️  dashboard.js not found!
+
+=== Processing combined-scripts-final.js ===
+Cleaned script copied to release/combined-scripts.js
+Differences with backup:
+-function _2showNodesMgmt(){document.getElementById('nodes-panel').style.display='none';document.getElementById('nodes-management-panel').style.display='block';}
++function showNodesMgmt(){document.getElementById('nodes-panel').style.display='none';document.getElementById('nodes-management-panel').style.display='block';}
+-buyCoins(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
++function buyCoins(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
+-updatePremiumPanel(){
+-  const panel _2= document.getElementById('premium-panel');
++function updatePremiumPanel(){
++  const panel = document.getElementById('premium-panel');
+-buyCoins(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
++function buyCoins(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
+-function _3showAdminPanel(){
++function showAdminPanel(){
+-  refreshNodes(nodes){
++  function refreshNodes(nodes){
+-  refreshClients(clients){
+-    const tbody _2= document.querySelector('#admin-clients-table tbody');
++  function refreshClients(clients){
++    const tbody = document.querySelector('#admin-clients-table tbody');
+-      const row _2= document.createElement('tr');
++      const row = document.createElement('tr');
+-refreshSOCData(){
++function refreshSOCData(){
+-refreshCoinReferralStats(){
++function refreshCoinReferralStats(){
+-refreshCoinCash(){
++function refreshCoinCash(){
+-refreshSOCData(){
++function refreshSOCData(){
+-refreshCoinReferralStats(){
++function refreshCoinReferralStats(){
+-refreshCoinCash(){
++function refreshCoinCash(){
+-refreshNodes(nodes = []) {
+-  const tbody _3= document.querySelector('#admin-nodes-table tbody'); tbody.innerHTML = '';
+-  nodes.forEach(node => { const row _3= document.createElement('tr');
++function refreshNodes(nodes = []) {
++  const tbody = document.querySelector('#admin-nodes-table tbody'); tbody.innerHTML = '';
++  nodes.forEach(node => { const row = document.createElement('tr');
+-addAdminNotification(msg) { const d = document.createElement('div'); d.className='admin-notification'; d.innerText=msg; document.querySelector('#admin-notifications').appendChild(d); }
++function addAdminNotification(msg) { const d = document.createElement('div'); d.className='admin-notification'; d.innerText=msg; document.querySelector('#admin-notifications').appendChild(d); }
+-    const tbody _4= document.querySelector("#admin-nodes-table tbody");
+-    const nodeRow _2= Array.from(tbody.rows).find(r => r.cells[0].innerText === id);
++    const tbody = document.querySelector("#admin-nodes-table tbody");
++    const nodeRow = Array.from(tbody.rows).find(r => r.cells[0].innerText === id);
+-function _4saveUserData() {
++function saveUserData() {
+-function _5safeBuyCoins(amount) {
++function safeBuyCoins(amount) {
+-        const data _2= JSON.parse(event.data);
++        const data = JSON.parse(event.data);
+-refreshSOCBackend() {
++function refreshSOCBackend() {
+-refreshThreatFeedBackend() {
++function refreshThreatFeedBackend() {
+-async function _6safeFetch(url, options = {}) {
++async function safeFetch(url, options = {}) {
+-        const data _3= await res.json();
++        const data = await res.json();
+-async function _7safeRunScan(site) {
++async function safeRunScan(site) {
+-async function _8safeUpdateCompliance(site) {
+-    const result _2= await safeFetch(`/api/compliance?site=${encodeURIComponent(site)}`);
++async function safeUpdateCompliance(site) {
++    const result = await safeFetch(`/api/compliance?site=${encodeURIComponent(site)}`);
+-        const data _4= JSON.parse(event.data);
++        const data = JSON.parse(event.data);
+-async function _9safeRefreshSOC() {
++async function safeRefreshSOC() {
+-        const res _2= await fetch("/api/soc");
+-        const data _5= await res.json();
++        const res = await fetch("/api/soc");
++        const data = await res.json();
+-            const div _2= document.createElement("div");
++            const div = document.createElement("div");
+-async function _10safeRefreshCoins() {
++async function safeRefreshCoins() {
+-        const res _3= await fetch("/api/coins");
+-        const data _6= await res.json();
++        const res = await fetch("/api/coins");
++        const data = await res.json();
+-        const res _4= await fetch(`/api/nodes/${id}`, {
++        const res = await fetch(`/api/nodes/${id}`, {
+-        const data _7= await res.json();
++        const data = await res.json();
+-        const res _5= await fetch(`/api/nodes/${id}`, { method: "DELETE" });
+-        const data _8= await res.json();
++        const res = await fetch(`/api/nodes/${id}`, { method: "DELETE" });
++        const data = await res.json();
+-editNode(id) {
+-    const nodeRow _3= Array.from(document.querySelectorAll("#admin-nodes-table tbody tr"))
++function editNode(id) {
++    const nodeRow = Array.from(document.querySelectorAll("#admin-nodes-table tbody tr"))
+-    const newToken _2= prompt("Enter new token:", nodeRow.cells[1].innerText);
++    const newToken = prompt("Enter new token:", nodeRow.cells[1].innerText);
+-deleteNode(id) {
++function deleteNode(id) {
+
+=== Processing script-block-summary.txt ===
+Cleaned script copied to release/script-block-summary.txt
+No backup found for script-block-summary.txt
+
+=== Processing script-summary.txt ===
+Cleaned script copied to release/script-summary.txt
+No backup found for script-summary.txt
+⚠️  inbox.js not found!
+
+=== Processing full-summary.txt ===
+Cleaned script copied to release/full-summary.txt
+No backup found for full-summary.txt
+
+✅ Deployment prep complete. Clean scripts are in 'release/'.
+Deployment started: Fri Mar 13 19:09:31 WAT 2026

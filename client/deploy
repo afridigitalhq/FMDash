@@ -1,0 +1,39 @@
+#!/bin/bash
+
+echo "🚀 Starting FMDash Deployment..."
+
+# create folders
+mkdir -p backup
+mkdir -p release
+mkdir -p releases
+
+log="deployment_log.txt"
+echo "Deployment started: $(date)" >> $log
+
+echo "📦 Cleaning scripts..."
+
+sed -E 's/function ([a-zA-Z0-9_]+)_+[0-9]+/\1/g' combined-scripts-final.js | \
+sed -E 's/([a-zA-Z0-9]+)_+[0-9]+=/\1=/g' > release/combined-scripts.js
+
+echo "✅ Scripts cleaned"
+
+echo "📁 Creating deployment snapshot..."
+
+timestamp=$(date +"%Y-%m-%d-%H-%M")
+
+zip -r "releases/release-$timestamp.zip" release >/dev/null
+
+echo "📦 Snapshot created: release-$timestamp.zip"
+
+echo "📤 Committing to Git..."
+
+git add .
+git commit -m "FMDash deploy $timestamp"
+
+echo "📡 Pushing to GitHub..."
+
+git push origin main
+
+echo "🌍 Render will auto-deploy if connected."
+
+echo "✅ Deployment Complete."
