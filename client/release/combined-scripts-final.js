@@ -96,11 +96,11 @@ function updatePremiumPanel(){
     <p>Tier Limits: Basic = Scan only, Pro = Scan + Manual/Auto Stop, Elite = All actions</p>
   `;
 }
-function buyCoin_2s(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
+buyCoins(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
 setInterval(updatePremiumPanel, 5000); // refresh panel every 5s to reflect live changes
 updatePremiumPanel();
 // --- Live Premium Tier & Coin Panel ---
-function updatePremiumPanel_2(){
+updatePremiumPanel(){
   const panel _2= document.getElementById('premium-panel');
   panel.innerHTML = `
     <h2>Upgrade / Buy Coins</h2>
@@ -112,7 +112,7 @@ function updatePremiumPanel_2(){
     <p>Tier Limits: Basic = Scan only, Pro = Scan + Manual/Auto Stop, Elite = All actions</p>
   `;
 }
-function buyCoin_3s(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
+buyCoins(amount){ coins += amount; updateButtons(); updatePremiumPanel(); addNotification(`Bought ${amount} coins.`); }
 setInterval(updatePremiumPanel, 5000); // refresh panel every 5s to reflect live changes
 updatePremiumPanel();
 // === Master Admin Panel ===
@@ -128,7 +128,7 @@ function _3showAdminPanel(){
   `;
 
   // --- Populate nodes ---
-  function refre_2shNodes(nodes){
+  refreshNodes(nodes){
     const tbody = document.querySelector('#admin-nodes-table tbody');
     tbody.innerHTML='';
     nodes.forEach(n=>{
@@ -144,7 +144,7 @@ function _3showAdminPanel(){
   }
 
   // --- Populate clients ---
-  function refre_3shClients(clients){
+  refreshClients(clients){
     const tbody _2= document.querySelector('#admin-clients-table tbody');
     tbody.innerHTML='';
     clients.forEach(c=>{
@@ -203,7 +203,7 @@ document.getElementById('quick-scan-btn').onclick=()=>runScan("quick");
 document.getElementById('full-scan-btn').onclick=()=>runScan("full");
 
 document.getElementById('schedule-scan-btn').onclick=()=>{
-  const site_2=document.getElementById('scan-site-input').value;
+  const site=document.getElementById('scan-site-input').value;
 
   wsMulti.send(JSON.stringify({
     type:"schedule_scan",
@@ -221,7 +221,7 @@ document.getElementById('download-report-btn').onclick=()=>{
 };
 
 wsMulti.addEventListener("message",(e)=>{
-  const d_2=JSON.parse(e.data);
+  const d=JSON.parse(e.data);
 
   if(d.type==="scan_update"){
     scanStatus.innerText=d.status;
@@ -241,7 +241,7 @@ const complianceResults=document.getElementById("compliance-results");
 
 document.getElementById("run-compliance-scan").onclick=()=>{
 
-const site_3=document.getElementById("compliance-site").value;
+const site=document.getElementById("compliance-site").value;
 
 if(!site){
 complianceStatus.innerText="Enter a site first.";
@@ -291,7 +291,7 @@ const socActiveNodes=document.getElementById("soc-active-nodes");
 const socSystemHealth=document.getElementById("soc-system-health");
 const socLog=document.getElementById("soc-log");
 
-function refre_4shSOCData(){
+refreshSOCData(){
 socActiveThreats.innerText=Math.floor(Math.random()*12);
 socGlobalAttacks.innerText=Math.floor(Math.random()*48);
 socActiveNodes.innerText=Math.floor(Math.random()*20)+5;
@@ -307,7 +307,7 @@ const logs=[
 ];
 
 logs.forEach(l=>{
-const row_2=document.createElement("div");
+const row=document.createElement("div");
 row.innerText=l;
 socLog.appendChild(row);
 });
@@ -326,7 +326,7 @@ const socNodeContributions=document.getElementById("soc-node-contributions");
 const socReferralsToday=document.getElementById("soc-referrals-today");
 const socReferralBonus=document.getElementById("soc-referral-bonus");
 
-function refre_5shCoinReferralStats(){
+refreshCoinReferralStats(){
   socCoinsEarned.innerText=Math.floor(Math.random()*120);
   socNodeContributions.innerText=Math.floor(Math.random()*15)+1;
   socReferralsToday.innerText=Math.floor(Math.random()*5);
@@ -347,14 +347,14 @@ const socCashoutStatus=document.getElementById("soc-cashout-status");
 const socConvertBtn=document.getElementById("soc-convert-coins-btn");
 
 // Example: 1 coin = ₦50
-function refre_6shCoinCash(){
+refreshCoinCash(){
   const coins=Math.floor(Math.random()*120);
   socCurrentCoins.innerText=coins;
   socEstimatedCash.innerText="₦"+(coins*50);
 }
 
 socConvertBtn.onclick=()=>{
-  const coins_2=parseInt(socCurrentCoins.innerText);
+  const coins=parseInt(socCurrentCoins.innerText);
   if(coins<=0){
     socCashoutStatus.innerText="No coins available to convert.";
     return;
@@ -374,20 +374,20 @@ refreshCoinCash();
 
 
 // ---------- SOC Panel Data ----------
-const socActiveThreats_2=document.getElementById("soc-active-threats");
-const socGlobalAttacks_2=document.getElementById("soc-global-attacks");
-const socActiveNodes_2=document.getElementById("soc-active-nodes");
-const socSystemHealth_2=document.getElementById("soc-system-health");
-const socLog_2=document.getElementById("soc-log");
+const socActiveThreats=document.getElementById("soc-active-threats");
+const socGlobalAttacks=document.getElementById("soc-global-attacks");
+const socActiveNodes=document.getElementById("soc-active-nodes");
+const socSystemHealth=document.getElementById("soc-system-health");
+const socLog=document.getElementById("soc-log");
 
-function refre_7shSOCData(){
+refreshSOCData(){
 socActiveThreats.innerText=Math.floor(Math.random()*12);
 socGlobalAttacks.innerText=Math.floor(Math.random()*48);
 socActiveNodes.innerText=Math.floor(Math.random()*20)+5;
 socSystemHealth.innerText=["Normal","Warning","Critical"][Math.floor(Math.random()*3)];
 
 socLog.innerHTML="";
-const logs_2=[
+const logs=[
 "New threat detected from IP: 185.22.xx.xx",
 "Node 7 synced successfully",
 "Brute force attack blocked on /login",
@@ -395,7 +395,7 @@ const logs_2=[
 "High-risk IP blocked globally"
 ];
 logs.forEach(l=>{
-const row_3=document.createElement("div");
+const row=document.createElement("div");
 row.innerText=l;
 socLog.appendChild(row);
 });
@@ -405,12 +405,12 @@ setInterval(refreshSOCData,15000);
 refreshSOCData();
 
 // ---------- Coin & Referral Stats ----------
-const socCoinsEarned_2=document.getElementById("soc-coins-earned");
-const socNodeContributions_2=document.getElementById("soc-node-contributions");
-const socReferralsToday_2=document.getElementById("soc-referrals-today");
-const socReferralBonus_2=document.getElementById("soc-referral-bonus");
+const socCoinsEarned=document.getElementById("soc-coins-earned");
+const socNodeContributions=document.getElementById("soc-node-contributions");
+const socReferralsToday=document.getElementById("soc-referrals-today");
+const socReferralBonus=document.getElementById("soc-referral-bonus");
 
-function refre_8shCoinReferralStats(){
+refreshCoinReferralStats(){
   socCoinsEarned.innerText=Math.floor(Math.random()*120);
   socNodeContributions.innerText=Math.floor(Math.random()*15)+1;
   socReferralsToday.innerText=Math.floor(Math.random()*5);
@@ -421,18 +421,18 @@ setInterval(refreshCoinReferralStats,20000);
 refreshCoinReferralStats();
 
 // ---------- Coin Conversion / Payout ----------
-const socCurrentCoins_2=document.getElementById("soc-current-coins");
-const socEstimatedCash_2=document.getElementById("soc-estimated-cash");
-const socCashoutStatus_2=document.getElementById("soc-cashout-status");
-const socConvertBtn_2=document.getElementById("soc-convert-coins-btn");
+const socCurrentCoins=document.getElementById("soc-current-coins");
+const socEstimatedCash=document.getElementById("soc-estimated-cash");
+const socCashoutStatus=document.getElementById("soc-cashout-status");
+const socConvertBtn=document.getElementById("soc-convert-coins-btn");
 
-function refre_9shCoinCash(){
-  const coins_3=Math.floor(Math.random()*120);
+refreshCoinCash(){
+  const coins=Math.floor(Math.random()*120);
   socCurrentCoins.innerText=coins;
   socEstimatedCash.innerText="₦"+(coins*50);
 }
 socConvertBtn.onclick=()=>{
-  const coins_4=parseInt(socCurrentCoins.innerText);
+  const coins=parseInt(socCurrentCoins.innerText);
   if(coins<=0){ socCashoutStatus.innerText="No coins available to convert."; return; }
   socCashoutStatus.innerText="Processing payout...";
   setTimeout(()=>{
@@ -453,7 +453,7 @@ let countdownInterval;
 function updateCountdown(){
   if(countdown<=0){
     countdown=3600; // default 1h interval
-    const row_4=document.createElement("div");
+    const row=document.createElement("div");
     row.innerText=new Date().toLocaleTimeString()+": Auto scan executed for "+document.getElementById("sched-site-input").value;
     historyEl.appendChild(row);
   }
@@ -486,7 +486,7 @@ function updateWorldMap(){
 
 // Simulate live threat feed
 function updateThreatFeed(){
-    const logs_3=[
+    const logs=[
         "New DDoS attack blocked from 203.0.113."+Math.floor(Math.random()*255),
         "SQL Injection attempt blocked at /login",
         "XSS attack detected at /search",
@@ -495,7 +495,7 @@ function updateThreatFeed(){
     ];
     threatFeed.innerHTML="";
     logs.forEach(l=>{
-        const row_5=document.createElement("div");
+        const row=document.createElement("div");
         row.innerText=new Date().toLocaleTimeString()+": "+l;
         threatFeed.appendChild(row);
     });
@@ -507,12 +507,12 @@ updateWorldMap();
 updateThreatFeed();
 
 // === MASTER ADMIN PANEL LOGIC ===
-function refre_10shNodes(nodes = []) {
+refreshNodes(nodes = []) {
   const tbody _3= document.querySelector('#admin-nodes-table tbody'); tbody.innerHTML = '';
   nodes.forEach(node => { const row _3= document.createElement('tr');
   row.innerHTML = `<td>${node.id}</td><td>${node.token}</td><td>${node.capabilities.join(', ')}</td><td><button onclick='editNode(\"${node.id}\")'>Edit</button> <button onclick='deleteNode(\"${node.id}\")'>Delete</button></td>`; tbody.appendChild(row); });
 }
-function addAdminNotification_2(msg) { const d = document.createElement('div'); d.className='admin-notification'; d.innerText=msg; document.querySelector('#admin-notifications').appendChild(d); }
+addAdminNotification(msg) { const d = document.createElement('div'); d.className='admin-notification'; d.innerText=msg; document.querySelector('#admin-notifications').appendChild(d); }
 
 
 /* --- Master Admin Panel: Edit & Delete Nodes --- */
@@ -603,7 +603,7 @@ wsMulti.onerror = (err) => console.error("wsMulti error:", err);
 wsMulti.onclose = () => console.log("wsMulti disconnected");
 
 /* --- SOC Backend Integration --- */ 
-function refre_11shSOCBackend() {
+refreshSOCBackend() {
     try {
         fetch("/api/soc-status")
             .then(res => res.json())
@@ -625,7 +625,7 @@ function refre_11shSOCBackend() {
 setInterval(refreshSOCBackend, 30000);
 refreshSOCBackend();
 /* --- Threat Feed & World Map Live Updates --- */
-function refre_12shThreatFeedBackend() {
+refreshThreatFeedBackend() {
     try {
         fetch("/api/threat-feed")
             .then(res => res.json())
@@ -756,7 +756,7 @@ async function deleteNodeBackend(id) {
 }
 
 // Override UI functions to call backend
-function editNode_2(id) {
+editNode(id) {
     const nodeRow _3= Array.from(document.querySelectorAll("#admin-nodes-table tbody tr"))
         .find(r => r.cells[0].innerText === id);
     if(!nodeRow) return;
@@ -764,6 +764,6 @@ function editNode_2(id) {
     if(newToken) updateNodeBackend(id, newToken);
 }
 
-function deleteNode_2(id) {
+deleteNode(id) {
     if(confirm(`Delete node ${id}?`)) deleteNodeBackend(id);
 }
