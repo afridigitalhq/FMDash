@@ -1,0 +1,10 @@
+body{font-family:Arial,sans-serif;background:#f9f9f9;color:#333;margin:0;padding:0;}
+header{background:#1a73e8;color:white;padding:10px;overflow:hidden;}
+.marquee{background:#eee;padding:5px;margin:5px 0;}
+.sidebar{float:left;width:200px;background:#f1f1f1;padding:10px;margin-right:20px;}
+.sidebar ul{list-style:none;padding:0;} .sidebar li{padding:8px 0;}
+.store-section,.subscriptions,.scan-controls{background:white;border:1px solid #ccc;padding:10px;margin-top:20px;}
+.store-section button,.subscriptions button,.scan-controls button{margin:5px;padding:6px 10px;cursor:pointer;}
+.store-section button:hover,.subscriptions button:hover,.scan-controls button:hover{background:#1a73e8;color:white;border:none;border-radius:4px;}
+#chat-box{height:150px;overflow-y:auto;border:1px solid #ccc;margin-bottom:5px;padding:5px;}
+#chat-input{width:70%;padding:5px;}#chat-send{padding:5px 10px;}
