@@ -108,3 +108,51 @@ wss.on('connection', ws => {
 });
 
 server.listen(5000, ()=>console.log('FMDash server running on port 5000'));
+
+// Example: api/ui_check route
+app.get('/api/ui_check', (req, res) => {
+  const { view, user, element } = req.query;
+
+  // For testing, we just always return ok
+  res.json({ status: 'ok' });
+
+  // Uncomment below for actual element logic
+  /*
+  const elements = {
+    desktop: { 
+      guest: ['header','sidebar','chat widget','coins panel'], 
+      admin: ['header','sidebar','chat widget','coins panel'] 
+    },
+    mobile: { 
+      guest: ['header','sidebar','chat widget','coins panel'], 
+      admin: ['header','sidebar','chat widget','coins panel'] 
+    }
+  };
+  const exists = elements[view]?.[user]?.includes(element);
+  res.json({ status: exists ? 'ok' : 'missing' });
+  */
+});
+
+// Add UI check route
+app.get('/api/ui_check', (req, res) => {
+  const { view, user, element } = req.query;
+  res.json({ status: 'ok' });
+});
+
+// UI check route
+app.get('/api/ui_check', (req, res) => {
+  const { view, user, element } = req.query;
+  res.json({ status: 'ok' });
+});
+
+// UI check route
+app.get('/api/ui_check', (req, res) => {
+  const { view, user, element } = req.query;
+  res.json({ status: 'ok' });
+});
+
+// UI check route
+app.get('/api/ui_check', (req, res) => {
+  const { view, user, element } = req.query;
+  res.json({ status: 'ok' });
+});
