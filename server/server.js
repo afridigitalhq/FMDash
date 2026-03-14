@@ -156,3 +156,9 @@ app.get('/api/ui_check', (req, res) => {
   const { view, user, element } = req.query;
   res.json({ status: 'ok' });
 });
+
+// UI check route
+app.get('/api/ui_check', (req, res) => {
+  const { view, user, element } = req.query;
+  res.json({ status: 'ok' });
+});
