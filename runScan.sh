@@ -1,26 +1,23 @@
 #!/bin/bash
-
-# Simple FMDash Termux scan script
-# Usage: ./runScan.sh https://example.com
-
-TARGET="$1"
-if [ -z "$TARGET" ]; then
-  echo "Usage: $0 <target-url>"
-  exit 1
-fi
-
-# Mock scan results
-VULNERABILITIES=("SQL Injection" "XSS" "Missing HTTPS")
-SEVERITIES=("High" "Medium" "Low")
-RANDOM_INDEX=$((RANDOM % 3))
-VULN=${VULNERABILITIES[$RANDOM_INDEX]}
-SEV=${SEVERITIES[$RANDOM_INDEX]}
-TIMESTAMP=$(date +"%Y-%m-%d %H:%M")
-
-# Post to FMDash
-curl -s -X POST https://afridigital-fmdash.onrender.com/admin/add-scan \
--H "x-api-key: AfriDigital-FMDash-API-Key" \
--H "Content-Type: application/json" \
--d "{\"target\":\"$TARGET\",\"vulnerability\":\"$VULN\",\"severity\":\"$SEV\",\"timestamp\":\"$TIMESTAMP\"}"
-
-echo -e "\nScan posted: $TARGET | $VULN | $SEV | $TIMESTAMP"
+TEMPLATE_DIR=~/FMDash/nuclei/templates
+TARGET_FILE=~/FMDash/targets.txt
+SERVER_URL="http://localhost:5000/api/scan-results"
+export PATH=$PATH:$HOME/go/bin
+while true; do
+    echo "[INFO $(date '+%Y-%m-%d %H:%M:%S')] Updating Nuclei templates..."
+    cd $TEMPLATE_DIR && git pull --depth=1
+    echo "[INFO $(date '+%Y-%m-%d %H:%M:%S')] Reading targets from $TARGET_FILE..."
+    while read -r target; do
+        if [ -n "$target" ]; then
+            echo "[INFO $(date '+%Y-%m-%d %H:%M:%S')] Scanning target: $target"
+            nuclei -u "$target" -t $TEMPLATE_DIR -silent | while read -r line; do
+                echo "[MATCH $(date '+%Y-%m-%d %H:%M:%S')] Target: $target | $line"
+                curl -s -X POST -H "Content-Type: application/json" \
+                    -d "{\"target\":\"$target\",\"vulnerability\":\"$line\",\"severity\":\"Medium\",\"timestamp\":\"$(date +%Y-%m-%dT%H:%M:%S)\"}" \
+                    $SERVER_URL
+            done
+        fi
+    done < $TARGET_FILE
+    echo "[INFO $(date '+%Y-%m-%d %H:%M:%S')] Scan cycle completed. Waiting 30 seconds before next round..."
+    sleep 30
+done

@@ -1,0 +1,783 @@
+const express = require("express"); const app = express(); const path = require("path");
+const cookieParser = require("cookie-parser"); app.use(cookieParser());
+const geoip = require("geoip-lite"); const gatekeeper = require("./gatekeeper");
+const WebSocket = require('ws');
+const http = require('http');
+const server = http.createServer();
+app.use(express.static(path.join(__dirname, "../client/release")));
+app.use(express.static(path.join(__dirname,"../client/release")));
+
+let clients = [];
+let whitelist = {
+  'NODE_001': { token:'abc123', capabilities:{ scan:true, logs:true, manualStop:false, autoStop:false } },
+  'NODE_002': { token:'xyz789', capabilities:{ scan:true, logs:true, manualStop:true, autoStop:false } }
+};
+function blockNode(ws, reason){
+  if(ws.nodeId) console.log(`[BLOCKED] Node ${ws.nodeId} blocked: ${reason}`);
+  ws.close();
+}
+wss.on('connection', ws => {
+  ws.isAuthorized = false;
+  ws.on('message', msg => {
+    try {
+      const data = JSON.parse(msg);
+      if(data.action==='register'){
+        const entry = whitelist[data.nodeId];
+        if(entry && data.token===entry.token){
+          ws.nodeId = data.nodeId;
+          ws.capabilities = entry.capabilities;
+          ws.isAuthorized = true;
+          clients.push(ws);
+          ws.send(JSON.stringify({message:'Node registered successfully'}));
+          console.log(`[INFO] Node ${ws.nodeId} registered`);
+        } else { blockNode(ws,'Invalid registration'); }
+        return;
+      }
+      if(!ws.isAuthorized){ blockNode(ws,'Unauthorized'); return; }
+      if(data.action==='scan' && ws.capabilities.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); return; }
+      if(data.action==='logs' && ws.capabilities.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); return; }
+      if(data.action==='manual-stop'){ if(ws.capabilities.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized manual stop attempt'); return; } }
+      if(data.action==='auto-stop'){ if(ws.capabilities.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized auto stop attempt'); return; } }
+      if(data.action==='heartbeat'){ ws.send(JSON.stringify({message:'alive'})); return; }
+      blockNode(ws,'Unknown action');
+  });
+  ws.on('close', ()=>{ clients = clients.filter(c=>c!==ws); });
+  ws.send(JSON.stringify({client:{coins:150,tier:'Basic'}}));
+});
+function broadcast(data){ clients.forEach(c=>{ if(c.readyState===WebSocket.OPEN) c.send(JSON.stringify(data)); }); }
+server.listen(5000, ()=>console.log('FMDash server running on port 5000'));
+// === Dynamic Node Management ===
+let whitelistNodes = {...whitelist}; // clone original whitelist
+function sendNodesUpdate(){ broadcast({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}); }
+      if(!ws.isAuthorized) return;
+      // --- Add Node ---
+      if(data.action==='add-node'){
+        if(ws.nodeId!=='MASTER_ADMIN') return;
+        const {nodeId, token, capabilities} = data;
+        if(!nodeId || !token) return;
+        whitelistNodes[nodeId]={token, capabilities};
+        console.log(`[INFO] Node ${nodeId} added by master`);
+        sendNodesUpdate();
+      // --- Remove Node ---
+      if(data.action==='remove-node'){
+        const {nodeId} = data;
+        if(whitelistNodes[nodeId]){ delete whitelistNodes[nodeId]; console.log(`[INFO] Node ${nodeId} removed by master`); sendNodesUpdate(); }
+  // Send current node list on connect
+  ws.send(JSON.stringify({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}));
+// === Dynamic Capability Enforcement ===
+      
+      const caps = ws.capabilities || {};
+      switch(data.action){
+        case 'scan':
+          if(caps.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+          else blockNode(ws,'Unauthorized scan attempt');
+          break;
+        case 'logs':
+          if(caps.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); }
+          else blockNode(ws,'Unauthorized logs attempt');
+        case 'manual-stop':
+          if(caps.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized manual stop attempt');
+        case 'auto-stop':
+          if(caps.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized auto stop attempt');
+        default:
+          blockNode(ws,'Unknown action');
+// === Coins / Premium Tier Enforcement & Multi-layer Node Validation ===
+const blockedIPs = new Set();
+function validateNodeLayer(ws,data){
+  if(blockedIPs.has(ws._socket.remoteAddress)) return false;
+  const entry = whitelistNodes[data.nodeId];
+  if(!entry || entry.token!==data.token) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} invalid token`); return false; }
+  // Layer 2: simple handshake challenge
+  if(data.nonce!==expectedNonce(data.nodeId)) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} failed handshake`); return false; }
+  return true;
+// Example expectedNonce function (could be more complex)
+function expectedNonce(nodeId){ return 'nonce_'+nodeId; }
+      // --- Multi-layer node validation ---
+        if(!validateNodeLayer(ws,data)){ blockNode(ws,'Failed multi-layer validation'); return; }
+      // --- Coin / Tier Enforcement ---
+      if(data.action==='scan'){
+        if(ws.clientCoins>=10){ ws.clientCoins-=10; broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+        else blockNode(ws,'Insufficient coins for scan');
+      if(data.action==='manual-stop'){
+        if(ws.clientCoins>=20 && ws.capabilities.manualStop){ ws.clientCoins-=20; broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Manual Stop denied');
+      if(data.action==='auto-stop'){
+        if(ws.clientCoins>=50 && ws.capabilities.autoStop){ ws.clientCoins-=50; broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Auto Stop denied');
+// ===============================
+// BEHAVIORAL ANOMALY DETECTION
+const behaviorDB={};
+function analyzeBehavior(ip,endpoint){
+  const now=Date.now();
+  if(!behaviorDB[ip]){
+    behaviorDB[ip]={
+      endpoints:{},
+      firstSeen:now,
+      lastSeen:now,
+      anomalies:0
+    };
+  }
+  const entry=behaviorDB[ip];
+  entry.lastSeen=now;
+  if(!entry.endpoints[endpoint]){
+    entry.endpoints[endpoint]=0;
+  entry.endpoints[endpoint]++;
+  // anomaly rules
+  let anomaly=false;
+  // hitting many different endpoints quickly
+  const uniqueEndpoints=Object.keys(entry.endpoints).length;
+  if(uniqueEndpoints>10){
+    anomaly=true;
+  // heavy focus on login
+  if(endpoint.includes("login") && entry.endpoints[endpoint]>20){
+  if(anomaly){
+    entry.anomalies++;
+    const report={
+      type:"behavior_anomaly",
+      ip,
+      endpoint,
+      anomalies:entry.anomalies,
+      time:now
+    console.log("[ANOMALY DETECTED]",report);
+    // raise threat score
+    processThreat(ip,"behavior-anomaly",endpoint,"behavior-engine");
+    // notify dashboard
+    clients.forEach(c=>{
+      if(c.ws && c.ws.readyState===1){
+        c.ws.send(JSON.stringify(report));
+    });
+    // send to AI socket
+    sendToAI(report);
+// attach to request flow
+app.use((req,res,next)=>{
+  const ip=req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  analyzeBehavior(ip,req.path);
+  next();
+app.get("/", (req,res)=>{ const adminCookie=req.cookies?.FMDASH_ADMIN; if(adminCookie==="true"){ res.redirect("/admin"); } else { res.sendFile(path.join(__dirname,"../client/release/guest.html")); } });
+console.log("[SECURITY] Behavioral anomaly detection active");
+wss.on('connection', ws => {
+  ws.isAuthorized = false;
+  ws.on('message', msg => {
+    try {
+      const data = JSON.parse(msg);
+      if(data.action === 'register'){
+        const entry = whitelist[data.nodeId];
+        if(entry && data.token === entry.token){
+          ws.nodeId = data.nodeId;
+          ws.capabilities = entry.capabilities;
+          ws.isAuthorized = true;
+          clients.push(ws);
+          ws.send(JSON.stringify({message: 'Node registered successfully'}));
+          console.log(`[INFO] Node ${ws.nodeId} registered`);
+        } else { blockNode(ws, 'Invalid registration'); }
+        return;
+      }
+      if(!ws.isAuthorized){ blockNode(ws,'Unauthorized'); return; }
+      switch(data.action){
+        case 'scan': 
+          if(ws.capabilities.scan){ 
+            broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); 
+          } else blockNode(ws, 'Unauthorized scan attempt'); 
+          break;
+        case 'logs': 
+          if(ws.capabilities.logs){ 
+            console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); 
+          } else blockNode(ws, 'Unauthorized logs attempt'); 
+          break;
+        case 'manual-stop': 
+          if(ws.capabilities.manualStop){ 
+            broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); 
+          } else blockNode(ws, 'Unauthorized manual stop attempt'); 
+          break;
+        case 'auto-stop': 
+          if(ws.capabilities.autoStop){ 
+            broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); 
+          } else blockNode(ws, 'Unauthorized auto stop attempt'); 
+          break;
+        case 'heartbeat': 
+          ws.send(JSON.stringify({message:'alive'})); 
+          break;
+        default: blockNode(ws,'Unknown action');
+      }
+    } catch(e){ console.log(e); blockNode(ws,'Malformed message'); }
+  });
+  ws.on('close', ()=>{ clients = clients.filter(c=>c!==ws); });
+  ws.send(JSON.stringify({client:{coins:150,tier:'Basic'}}));
+});
+const express = require("express"); const app = express(); const path = require("path");
+const cookieParser = require("cookie-parser"); app.use(cookieParser());
+const geoip = require("geoip-lite"); const gatekeeper = require("./gatekeeper");
+const WebSocket = require('ws');
+const http = require('http');
+const server = http.createServer();
+app.use(express.static(path.join(__dirname, "../client/release")));
+app.use(express.static(path.join(__dirname,"../client/release")));
+
+let clients = [];
+let whitelist = {
+  'NODE_001': { token:'abc123', capabilities:{ scan:true, logs:true, manualStop:false, autoStop:false } },
+  'NODE_002': { token:'xyz789', capabilities:{ scan:true, logs:true, manualStop:true, autoStop:false } }
+};
+function blockNode(ws, reason){
+  if(ws.nodeId) console.log(`[BLOCKED] Node ${ws.nodeId} blocked: ${reason}`);
+  ws.close();
+}
+wss.on('connection', ws => {
+  ws.isAuthorized = false;
+  ws.on('message', msg => {
+    try {
+      const data = JSON.parse(msg);
+      if(data.action==='register'){
+        const entry = whitelist[data.nodeId];
+        if(entry && data.token===entry.token){
+          ws.nodeId = data.nodeId;
+          ws.capabilities = entry.capabilities;
+          ws.isAuthorized = true;
+          clients.push(ws);
+          ws.send(JSON.stringify({message:'Node registered successfully'}));
+          console.log(`[INFO] Node ${ws.nodeId} registered`);
+        } else { blockNode(ws,'Invalid registration'); }
+        return;
+      }
+      if(!ws.isAuthorized){ blockNode(ws,'Unauthorized'); return; }
+      if(data.action==='scan' && ws.capabilities.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); return; }
+      if(data.action==='logs' && ws.capabilities.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); return; }
+      if(data.action==='manual-stop'){ if(ws.capabilities.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized manual stop attempt'); return; } }
+      if(data.action==='auto-stop'){ if(ws.capabilities.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized auto stop attempt'); return; } }
+      if(data.action==='heartbeat'){ ws.send(JSON.stringify({message:'alive'})); return; }
+      blockNode(ws,'Unknown action');
+  });
+  ws.on('close', ()=>{ clients = clients.filter(c=>c!==ws); });
+  ws.send(JSON.stringify({client:{coins:150,tier:'Basic'}}));
+});
+function broadcast(data){ clients.forEach(c=>{ if(c.readyState===WebSocket.OPEN) c.send(JSON.stringify(data)); }); }
+server.listen(5000, ()=>console.log('FMDash server running on port 5000'));
+// === Dynamic Node Management ===
+let whitelistNodes = {...whitelist}; // clone original whitelist
+function sendNodesUpdate(){ broadcast({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}); }
+      if(!ws.isAuthorized) return;
+      // --- Add Node ---
+      if(data.action==='add-node'){
+        if(ws.nodeId!=='MASTER_ADMIN') return;
+        const {nodeId, token, capabilities} = data;
+        if(!nodeId || !token) return;
+        whitelistNodes[nodeId]={token, capabilities};
+        console.log(`[INFO] Node ${nodeId} added by master`);
+        sendNodesUpdate();
+      // --- Remove Node ---
+      if(data.action==='remove-node'){
+        const {nodeId} = data;
+        if(whitelistNodes[nodeId]){ delete whitelistNodes[nodeId]; console.log(`[INFO] Node ${nodeId} removed by master`); sendNodesUpdate(); }
+  // Send current node list on connect
+  ws.send(JSON.stringify({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}));
+// === Dynamic Capability Enforcement ===
+      
+      const caps = ws.capabilities || {};
+      switch(data.action){
+        case 'scan':
+          if(caps.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+          else blockNode(ws,'Unauthorized scan attempt');
+          break;
+        case 'logs':
+          if(caps.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); }
+          else blockNode(ws,'Unauthorized logs attempt');
+        case 'manual-stop':
+          if(caps.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized manual stop attempt');
+        case 'auto-stop':
+          if(caps.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized auto stop attempt');
+        default:
+          blockNode(ws,'Unknown action');
+// === Coins / Premium Tier Enforcement & Multi-layer Node Validation ===
+const blockedIPs = new Set();
+function validateNodeLayer(ws,data){
+  if(blockedIPs.has(ws._socket.remoteAddress)) return false;
+  const entry = whitelistNodes[data.nodeId];
+  if(!entry || entry.token!==data.token) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} invalid token`); return false; }
+  // Layer 2: simple handshake challenge
+  if(data.nonce!==expectedNonce(data.nodeId)) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} failed handshake`); return false; }
+  return true;
+// Example expectedNonce function (could be more complex)
+function expectedNonce(nodeId){ return 'nonce_'+nodeId; }
+      // --- Multi-layer node validation ---
+        if(!validateNodeLayer(ws,data)){ blockNode(ws,'Failed multi-layer validation'); return; }
+      // --- Coin / Tier Enforcement ---
+      if(data.action==='scan'){
+        if(ws.clientCoins>=10){ ws.clientCoins-=10; broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+        else blockNode(ws,'Insufficient coins for scan');
+      if(data.action==='manual-stop'){
+        if(ws.clientCoins>=20 && ws.capabilities.manualStop){ ws.clientCoins-=20; broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Manual Stop denied');
+      if(data.action==='auto-stop'){
+        if(ws.clientCoins>=50 && ws.capabilities.autoStop){ ws.clientCoins-=50; broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Auto Stop denied');
+// ===============================
+// BEHAVIORAL ANOMALY DETECTION
+const behaviorDB={};
+function analyzeBehavior(ip,endpoint){
+  const now=Date.now();
+  if(!behaviorDB[ip]){
+    behaviorDB[ip]={
+      endpoints:{},
+      firstSeen:now,
+      lastSeen:now,
+      anomalies:0
+    };
+  }
+  const entry=behaviorDB[ip];
+  entry.lastSeen=now;
+  if(!entry.endpoints[endpoint]){
+    entry.endpoints[endpoint]=0;
+  entry.endpoints[endpoint]++;
+  // anomaly rules
+  let anomaly=false;
+  // hitting many different endpoints quickly
+  const uniqueEndpoints=Object.keys(entry.endpoints).length;
+  if(uniqueEndpoints>10){
+    anomaly=true;
+  // heavy focus on login
+  if(endpoint.includes("login") && entry.endpoints[endpoint]>20){
+  if(anomaly){
+    entry.anomalies++;
+    const report={
+      type:"behavior_anomaly",
+      ip,
+      endpoint,
+      anomalies:entry.anomalies,
+      time:now
+    console.log("[ANOMALY DETECTED]",report);
+    // raise threat score
+    processThreat(ip,"behavior-anomaly",endpoint,"behavior-engine");
+    // notify dashboard
+    clients.forEach(c=>{
+      if(c.ws && c.ws.readyState===1){
+        c.ws.send(JSON.stringify(report));
+    });
+    // send to AI socket
+    sendToAI(report);
+// attach to request flow
+app.use((req,res,next)=>{
+  const ip=req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  analyzeBehavior(ip,req.path);
+  next();
+app.get("/", (req,res)=>{ const adminCookie=req.cookies?.FMDASH_ADMIN; if(adminCookie==="true"){ res.redirect("/admin"); } else { res.sendFile(path.join(__dirname,"../client/release/guest.html")); } });
+console.log("[SECURITY] Behavioral anomaly detection active");
+wss.on('connection', ws => {
+  ws.isAuthorized = false;
+  ws.on('message', msg => {
+    try {
+      const data = JSON.parse(msg);
+      if(data.action === 'register'){
+        const entry = whitelist[data.nodeId];
+        if(entry && data.token === entry.token){
+          ws.nodeId = data.nodeId;
+          ws.capabilities = entry.capabilities;
+          ws.isAuthorized = true;
+          clients.push(ws);
+          ws.send(JSON.stringify({message:'Node registered successfully'}));
+          console.log(`[INFO] Node ${ws.nodeId} registered`);
+        } else { blockNode(ws,'Invalid registration'); }
+        return;
+      }
+      if(!ws.isAuthorized){ blockNode(ws,'Unauthorized'); return; }
+      switch(data.action){
+        case 'scan':
+          if(ws.capabilities.scan){
+            broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}});
+          } else blockNode(ws,'Unauthorized scan attempt');
+          break;
+        case 'logs':
+          if(ws.capabilities.logs){
+            console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`);
+          } else blockNode(ws,'Unauthorized logs attempt');
+          break;
+        case 'manual-stop':
+          if(ws.capabilities.manualStop){
+            broadcast({log:`Manual Stop executed by ${ws.nodeId}`});
+          } else blockNode(ws,'Unauthorized manual stop attempt');
+          break;
+        case 'auto-stop':
+          if(ws.capabilities.autoStop){
+            broadcast({log:`Auto Stop executed by ${ws.nodeId}`});
+          } else blockNode(ws,'Unauthorized auto stop attempt');
+          break;
+        case 'heartbeat':
+          ws.send(JSON.stringify({message:'alive'}));
+          break;
+        default: blockNode(ws,'Unknown action');
+      }
+    } catch(e){ console.log(e); blockNode(ws,'Malformed message'); }
+  });
+  ws.on('close', ()=>{ clients = clients.filter(c=>c!==ws); });
+  ws.send(JSON.stringify({client:{coins:150,tier:'Basic'}}));
+});
+const express = require("express"); const app = express(); const path = require("path");
+const cookieParser = require("cookie-parser"); app.use(cookieParser());
+const geoip = require("geoip-lite"); const gatekeeper = require("./gatekeeper");
+const WebSocket = require('ws');
+const http = require('http');
+const server = http.createServer();
+app.use(express.static(path.join(__dirname, "../client/release")));
+app.use(express.static(path.join(__dirname,"../client/release")));
+
+let clients = [];
+let whitelist = {
+  'NODE_001': { token:'abc123', capabilities:{ scan:true, logs:true, manualStop:false, autoStop:false } },
+  'NODE_002': { token:'xyz789', capabilities:{ scan:true, logs:true, manualStop:true, autoStop:false } }
+};
+function blockNode(ws, reason){
+  if(ws.nodeId) console.log(`[BLOCKED] Node ${ws.nodeId} blocked: ${reason}`);
+  ws.close();
+}
+wss.on('connection', ws => {
+  ws.isAuthorized = false;
+  ws.on('message', msg => {
+    try {
+      const data = JSON.parse(msg);
+      if(data.action==='register'){
+        const entry = whitelist[data.nodeId];
+        if(entry && data.token===entry.token){
+          ws.nodeId = data.nodeId;
+          ws.capabilities = entry.capabilities;
+          ws.isAuthorized = true;
+          clients.push(ws);
+          ws.send(JSON.stringify({message:'Node registered successfully'}));
+          console.log(`[INFO] Node ${ws.nodeId} registered`);
+        } else { blockNode(ws,'Invalid registration'); }
+        return;
+      }
+      if(!ws.isAuthorized){ blockNode(ws,'Unauthorized'); return; }
+      if(data.action==='scan' && ws.capabilities.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); return; }
+      if(data.action==='logs' && ws.capabilities.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); return; }
+      if(data.action==='manual-stop'){ if(ws.capabilities.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized manual stop attempt'); return; } }
+      if(data.action==='auto-stop'){ if(ws.capabilities.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized auto stop attempt'); return; } }
+      if(data.action==='heartbeat'){ ws.send(JSON.stringify({message:'alive'})); return; }
+      blockNode(ws,'Unknown action');
+  });
+  ws.on('close', ()=>{ clients = clients.filter(c=>c!==ws); });
+  ws.send(JSON.stringify({client:{coins:150,tier:'Basic'}}));
+});
+function broadcast(data){ clients.forEach(c=>{ if(c.readyState===WebSocket.OPEN) c.send(JSON.stringify(data)); }); }
+server.listen(5000, ()=>console.log('FMDash server running on port 5000'));
+// === Dynamic Node Management ===
+let whitelistNodes = {...whitelist}; // clone original whitelist
+function sendNodesUpdate(){ broadcast({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}); }
+      if(!ws.isAuthorized) return;
+      // --- Add Node ---
+      if(data.action==='add-node'){
+        if(ws.nodeId!=='MASTER_ADMIN') return;
+        const {nodeId, token, capabilities} = data;
+        if(!nodeId || !token) return;
+        whitelistNodes[nodeId]={token, capabilities};
+        console.log(`[INFO] Node ${nodeId} added by master`);
+        sendNodesUpdate();
+      // --- Remove Node ---
+      if(data.action==='remove-node'){
+        const {nodeId} = data;
+        if(whitelistNodes[nodeId]){ delete whitelistNodes[nodeId]; console.log(`[INFO] Node ${nodeId} removed by master`); sendNodesUpdate(); }
+  // Send current node list on connect
+  ws.send(JSON.stringify({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}));
+// === Dynamic Capability Enforcement ===
+      
+      const caps = ws.capabilities || {};
+      switch(data.action){
+        case 'scan':
+          if(caps.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+          else blockNode(ws,'Unauthorized scan attempt');
+          break;
+        case 'logs':
+          if(caps.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); }
+          else blockNode(ws,'Unauthorized logs attempt');
+        case 'manual-stop':
+          if(caps.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized manual stop attempt');
+        case 'auto-stop':
+          if(caps.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized auto stop attempt');
+        default:
+          blockNode(ws,'Unknown action');
+// === Coins / Premium Tier Enforcement & Multi-layer Node Validation ===
+const blockedIPs = new Set();
+function validateNodeLayer(ws,data){
+  if(blockedIPs.has(ws._socket.remoteAddress)) return false;
+  const entry = whitelistNodes[data.nodeId];
+  if(!entry || entry.token!==data.token) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} invalid token`); return false; }
+  // Layer 2: simple handshake challenge
+  if(data.nonce!==expectedNonce(data.nodeId)) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} failed handshake`); return false; }
+  return true;
+// Example expectedNonce function (could be more complex)
+function expectedNonce(nodeId){ return 'nonce_'+nodeId; }
+      // --- Multi-layer node validation ---
+        if(!validateNodeLayer(ws,data)){ blockNode(ws,'Failed multi-layer validation'); return; }
+      // --- Coin / Tier Enforcement ---
+      if(data.action==='scan'){
+        if(ws.clientCoins>=10){ ws.clientCoins-=10; broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+        else blockNode(ws,'Insufficient coins for scan');
+      if(data.action==='manual-stop'){
+        if(ws.clientCoins>=20 && ws.capabilities.manualStop){ ws.clientCoins-=20; broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Manual Stop denied');
+      if(data.action==='auto-stop'){
+        if(ws.clientCoins>=50 && ws.capabilities.autoStop){ ws.clientCoins-=50; broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Auto Stop denied');
+// ===============================
+// BEHAVIORAL ANOMALY DETECTION
+const behaviorDB={};
+function analyzeBehavior(ip,endpoint){
+  const now=Date.now();
+  if(!behaviorDB[ip]){
+    behaviorDB[ip]={
+      endpoints:{},
+      firstSeen:now,
+      lastSeen:now,
+      anomalies:0
+    };
+  }
+  const entry=behaviorDB[ip];
+  entry.lastSeen=now;
+  if(!entry.endpoints[endpoint]){
+    entry.endpoints[endpoint]=0;
+  entry.endpoints[endpoint]++;
+  // anomaly rules
+  let anomaly=false;
+  // hitting many different endpoints quickly
+  const uniqueEndpoints=Object.keys(entry.endpoints).length;
+  if(uniqueEndpoints>10){
+    anomaly=true;
+  // heavy focus on login
+  if(endpoint.includes("login") && entry.endpoints[endpoint]>20){
+  if(anomaly){
+    entry.anomalies++;
+    const report={
+      type:"behavior_anomaly",
+      ip,
+      endpoint,
+      anomalies:entry.anomalies,
+      time:now
+    console.log("[ANOMALY DETECTED]",report);
+    // raise threat score
+    processThreat(ip,"behavior-anomaly",endpoint,"behavior-engine");
+    // notify dashboard
+    clients.forEach(c=>{
+      if(c.ws && c.ws.readyState===1){
+        c.ws.send(JSON.stringify(report));
+    });
+    // send to AI socket
+    sendToAI(report);
+// attach to request flow
+app.use((req,res,next)=>{
+  const ip=req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  analyzeBehavior(ip,req.path);
+  next();
+app.get("/", (req,res)=>{ const adminCookie=req.cookies?.FMDASH_ADMIN; if(adminCookie==="true"){ res.redirect("/admin"); } else { res.sendFile(path.join(__dirname,"../client/release/guest.html")); } });
+console.log("[SECURITY] Behavioral anomaly detection active");
+wss.on('connection', ws => {
+  ws.isAuthorized = false;
+  ws.on('message', msg => {
+    try {
+      const data = JSON.parse(msg);
+      if(data.action === 'register'){
+        const entry = whitelist[data.nodeId];
+        if(entry && data.token === entry.token){
+          ws.nodeId = data.nodeId;
+          ws.capabilities = entry.capabilities;
+          ws.isAuthorized = true;
+          clients.push(ws);
+          ws.send(JSON.stringify({message: 'Node registered successfully'}));
+          console.log(`[INFO] Node ${ws.nodeId} registered`);
+        } else { blockNode(ws, 'Invalid registration'); }
+        return;
+      }
+      if(!ws.isAuthorized){ blockNode(ws,'Unauthorized'); return; }
+      switch(data.action){
+        case 'scan': 
+          if(ws.capabilities.scan){ 
+            broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); 
+          } else blockNode(ws, 'Unauthorized scan attempt'); 
+          break;
+        case 'logs': 
+          if(ws.capabilities.logs){ 
+            console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); 
+          } else blockNode(ws, 'Unauthorized logs attempt'); 
+          break;
+        case 'manual-stop': 
+          if(ws.capabilities.manualStop){ 
+            broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); 
+          } else blockNode(ws, 'Unauthorized manual stop attempt'); 
+          break;
+        case 'auto-stop': 
+          if(ws.capabilities.autoStop){ 
+            broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); 
+          } else blockNode(ws, 'Unauthorized auto stop attempt'); 
+          break;
+        case 'heartbeat': 
+          ws.send(JSON.stringify({message:'alive'})); 
+          break;
+        default: blockNode(ws,'Unknown action');
+      }
+    } catch(e){ console.log(e); blockNode(ws,'Malformed message'); }
+  });
+  ws.on('close', ()=>{ clients = clients.filter(c=>c!==ws); });
+  ws.send(JSON.stringify({client:{coins:150,tier:'Basic'}}));
+});
+const express = require("express"); const app = express(); const path = require("path");
+const cookieParser = require("cookie-parser"); app.use(cookieParser());
+const geoip = require("geoip-lite"); const gatekeeper = require("./gatekeeper");
+const WebSocket = require('ws');
+const http = require('http');
+const server = http.createServer();
+app.use(express.static(path.join(__dirname, "../client/release")));
+app.use(express.static(path.join(__dirname,"../client/release")));
+
+let clients = [];
+let whitelist = {
+  'NODE_001': { token:'abc123', capabilities:{ scan:true, logs:true, manualStop:false, autoStop:false } },
+  'NODE_002': { token:'xyz789', capabilities:{ scan:true, logs:true, manualStop:true, autoStop:false } }
+};
+function blockNode(ws, reason){
+  if(ws.nodeId) console.log(`[BLOCKED] Node ${ws.nodeId} blocked: ${reason}`);
+  ws.close();
+}
+wss.on('connection', ws => {
+  ws.isAuthorized = false;
+  ws.on('message', msg => {
+    try {
+      const data = JSON.parse(msg);
+      if(data.action==='register'){
+        const entry = whitelist[data.nodeId];
+        if(entry && data.token===entry.token){
+          ws.nodeId = data.nodeId;
+          ws.capabilities = entry.capabilities;
+          ws.isAuthorized = true;
+          clients.push(ws);
+          ws.send(JSON.stringify({message:'Node registered successfully'}));
+          console.log(`[INFO] Node ${ws.nodeId} registered`);
+        } else { blockNode(ws,'Invalid registration'); }
+        return;
+      }
+      if(!ws.isAuthorized){ blockNode(ws,'Unauthorized'); return; }
+      if(data.action==='scan' && ws.capabilities.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); return; }
+      if(data.action==='logs' && ws.capabilities.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); return; }
+      if(data.action==='manual-stop'){ if(ws.capabilities.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized manual stop attempt'); return; } }
+      if(data.action==='auto-stop'){ if(ws.capabilities.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); return; } else { blockNode(ws,'Unauthorized auto stop attempt'); return; } }
+      if(data.action==='heartbeat'){ ws.send(JSON.stringify({message:'alive'})); return; }
+      blockNode(ws,'Unknown action');
+  });
+  ws.on('close', ()=>{ clients = clients.filter(c=>c!==ws); });
+  ws.send(JSON.stringify({client:{coins:150,tier:'Basic'}}));
+});
+function broadcast(data){ clients.forEach(c=>{ if(c.readyState===WebSocket.OPEN) c.send(JSON.stringify(data)); }); }
+server.listen(5000, ()=>console.log('FMDash server running on port 5000'));
+// === Dynamic Node Management ===
+let whitelistNodes = {...whitelist}; // clone original whitelist
+function sendNodesUpdate(){ broadcast({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}); }
+      if(!ws.isAuthorized) return;
+      // --- Add Node ---
+      if(data.action==='add-node'){
+        if(ws.nodeId!=='MASTER_ADMIN') return;
+        const {nodeId, token, capabilities} = data;
+        if(!nodeId || !token) return;
+        whitelistNodes[nodeId]={token, capabilities};
+        console.log(`[INFO] Node ${nodeId} added by master`);
+        sendNodesUpdate();
+      // --- Remove Node ---
+      if(data.action==='remove-node'){
+        const {nodeId} = data;
+        if(whitelistNodes[nodeId]){ delete whitelistNodes[nodeId]; console.log(`[INFO] Node ${nodeId} removed by master`); sendNodesUpdate(); }
+  // Send current node list on connect
+  ws.send(JSON.stringify({nodes:Object.entries(whitelistNodes).map(([id,val])=>({nodeId:id,token:val.token,capabilities:val.capabilities}))}));
+// === Dynamic Capability Enforcement ===
+      
+      const caps = ws.capabilities || {};
+      switch(data.action){
+        case 'scan':
+          if(caps.scan){ broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+          else blockNode(ws,'Unauthorized scan attempt');
+          break;
+        case 'logs':
+          if(caps.logs){ console.log(`[LOG] Node ${ws.nodeId}: ${JSON.stringify(data.content)}`); }
+          else blockNode(ws,'Unauthorized logs attempt');
+        case 'manual-stop':
+          if(caps.manualStop){ broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized manual stop attempt');
+        case 'auto-stop':
+          if(caps.autoStop){ broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+          else blockNode(ws,'Unauthorized auto stop attempt');
+        default:
+          blockNode(ws,'Unknown action');
+// === Coins / Premium Tier Enforcement & Multi-layer Node Validation ===
+const blockedIPs = new Set();
+function validateNodeLayer(ws,data){
+  if(blockedIPs.has(ws._socket.remoteAddress)) return false;
+  const entry = whitelistNodes[data.nodeId];
+  if(!entry || entry.token!==data.token) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} invalid token`); return false; }
+  // Layer 2: simple handshake challenge
+  if(data.nonce!==expectedNonce(data.nodeId)) { blockedIPs.add(ws._socket.remoteAddress); console.log(`[BLOCKED] Node ${data.nodeId} IP ${ws._socket.remoteAddress} failed handshake`); return false; }
+  return true;
+// Example expectedNonce function (could be more complex)
+function expectedNonce(nodeId){ return 'nonce_'+nodeId; }
+      // --- Multi-layer node validation ---
+        if(!validateNodeLayer(ws,data)){ blockNode(ws,'Failed multi-layer validation'); return; }
+      // --- Coin / Tier Enforcement ---
+      if(data.action==='scan'){
+        if(ws.clientCoins>=10){ ws.clientCoins-=10; broadcast({scan:{target:data.target||'example.com',vulnerability:'SQL Injection',severity:'High',timestamp:Date.now()}}); }
+        else blockNode(ws,'Insufficient coins for scan');
+      if(data.action==='manual-stop'){
+        if(ws.clientCoins>=20 && ws.capabilities.manualStop){ ws.clientCoins-=20; broadcast({log:`Manual Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Manual Stop denied');
+      if(data.action==='auto-stop'){
+        if(ws.clientCoins>=50 && ws.capabilities.autoStop){ ws.clientCoins-=50; broadcast({log:`Auto Stop executed by ${ws.nodeId}`}); }
+        else blockNode(ws,'Auto Stop denied');
+// ===============================
+// BEHAVIORAL ANOMALY DETECTION
+const behaviorDB={};
+function analyzeBehavior(ip,endpoint){
+  const now=Date.now();
+  if(!behaviorDB[ip]){
+    behaviorDB[ip]={
+      endpoints:{},
+      firstSeen:now,
+      lastSeen:now,
+      anomalies:0
+    };
+  }
+  const entry=behaviorDB[ip];
+  entry.lastSeen=now;
+  if(!entry.endpoints[endpoint]){
+    entry.endpoints[endpoint]=0;
+  entry.endpoints[endpoint]++;
+  // anomaly rules
+  let anomaly=false;
+  // hitting many different endpoints quickly
+  const uniqueEndpoints=Object.keys(entry.endpoints).length;
+  if(uniqueEndpoints>10){
+    anomaly=true;
+  // heavy focus on login
+  if(endpoint.includes("login") && entry.endpoints[endpoint]>20){
+  if(anomaly){
+    entry.anomalies++;
+    const report={
+      type:"behavior_anomaly",
+      ip,
+      endpoint,
+      anomalies:entry.anomalies,
+      time:now
+    console.log("[ANOMALY DETECTED]",report);
+    // raise threat score
+    processThreat(ip,"behavior-anomaly",endpoint,"behavior-engine");
+    // notify dashboard
+    clients.forEach(c=>{
+      if(c.ws && c.ws.readyState===1){
+        c.ws.send(JSON.stringify(report));
+    });
+    // send to AI socket
+    sendToAI(report);
+// attach to request flow
+app.use((req,res,next)=>{
+  const ip=req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  analyzeBehavior(ip,req.path);
+  next();
+app.get("/", (req,res)=>{ const adminCookie=req.cookies?.FMDASH_ADMIN; if(adminCookie==="true"){ res.redirect("/admin"); } else { res.sendFile(path.join(__dirname,"../client/release/guest.html")); } });
+console.log("[SECURITY] Behavioral anomaly detection active");

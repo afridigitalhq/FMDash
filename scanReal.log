@@ -1,0 +1,13 @@
+nohup: ignoring input
+[WS] Error: Error: Unexpected server response: 502
+    at ClientRequest.<anonymous> (/data/data/com.termux/files/home/FMDash/node_modules/ws/lib/websocket.js:913:7)
+    at ClientRequest.emit (node:events:508:20)
+    at HTTPParser.parserOnIncomingClient (node:_http_client:798:27)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:125:17)
+    at TLSSocket.socketOnData (node:_http_client:633:22)
+    at TLSSocket.emit (node:events:508:20)
+    at addChunk (node:internal/streams/readable:564:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:515:3)
+    at Readable.push (node:internal/streams/readable:395:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+[WS] Disconnected
